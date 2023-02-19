@@ -55,6 +55,4 @@
 __attribute__((noreturn)) void averror(int code, const char *msg);
 __attribute__((noreturn)) void error(const char *msg);
 
-typedef void (*FrameProcesser)(const AVFrame *frame);
-
 #endif /* ifndef _UTILS_H_ */

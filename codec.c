@@ -177,7 +177,7 @@ void *decode_thread(PlayContext *ctx) {
         if (!pkt) {
             break;
         } else {
-            av_packet_unref(pkt);
+            av_packet_free(&pkt);
         }
     }
     logCodec("[%s-decode] finished\n", media_type_str);
@@ -189,7 +189,7 @@ void *video_play_thread(PlayContext *ctx) {
     Queue *q;
 
     logRender("[video-play] tid=%lu\n", pthread_self());
-    initRender();
+    init_render();
     q = &ctx->frame_queue;
 
     for (;;) {
@@ -198,8 +198,8 @@ void *video_play_thread(PlayContext *ctx) {
             logRender("[video-play] EOS\n");
             break;
         }
-        processVideoFrame(frame);
-        av_frame_unref(frame);
+        process_video_frame(ctx, frame);
+        av_frame_free(&frame);
     }
     logRender("[video-play] finished\n");
 
@@ -211,7 +211,7 @@ void *audio_play_thread(PlayContext *ctx) {
     Queue *q;
 
     logRender("[audio-play] tid=%lu\n", pthread_self());
-    initAudioPlay();
+    init_audio_play();
     q = &ctx->frame_queue;
 
     for (;;) {
@@ -220,8 +220,8 @@ void *audio_play_thread(PlayContext *ctx) {
             logRender("[video-play] EOS\n");
             break;
         }
-        processAudioFrame(frame);
-        av_frame_unref(frame);
+        process_audio_frame(ctx, frame);
+        av_frame_free(&frame);
     }
 
     logRender("[audio-play] finished\n");

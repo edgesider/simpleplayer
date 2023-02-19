@@ -10,7 +10,6 @@
 #include <libswscale/swscale.h>
 
 #include "utils.h"
-#include "context.h"
 #include "video.h"
 
 static GLFWwindow *window;
@@ -23,7 +22,7 @@ static float shaderBuffer[(3 + 2) * 4] = {
     1,  -1, 0, 1, 1,  // right-bottom
 };                    // (vec3 + vec2) * 4
 
-static uint compileShader(const char *code, uint type) {
+static uint compile_shader(const char *code, uint type) {
     int succ = 0;
     char info[512];
     uint shader;
@@ -44,7 +43,7 @@ static uint compileShader(const char *code, uint type) {
     return shader;
 }
 
-static void checkGLError() {
+static void check_gl_error() {
     int error = glGetError();
     if (error != GL_NO_ERROR) {
         logRenderE("gl error: %d\n", error);
@@ -52,7 +51,7 @@ static void checkGLError() {
     }
 }
 
-static void renderFrame(const AVFrame *frame) {
+static void render_frame(const PlayContext *ctx, const AVFrame *frame) {
     if (glfwWindowShouldClose(window)) {
         glfwTerminate();
         exit(-1);
@@ -76,16 +75,16 @@ static void renderFrame(const AVFrame *frame) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame->width, frame->height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, frame->data[0]);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    checkGLError();
+    check_gl_error();
     glfwSwapBuffers(window);
 
     int64_t frameTime =
-        av_rescale_q(1000 * 1000, (AVRational){1, 1}, vCC->framerate);
+        av_rescale_q(1000 * 1000, (AVRational){1, 1}, ctx->cc->framerate);
     av_usleep(frameTime);
 }
 
 // TODO 用OpenGL实现 / OpenGL渲染YUV
-static AVFrame *convertFrameToRGB24(const AVFrame *frame) {
+static AVFrame *convert_frame_to_rgb24(const AVFrame *frame) {
     int ret;
     if (frame->format == AV_PIX_FMT_RGB24) {
         // 复制新的AVFrame，同时共享Buffer
@@ -119,7 +118,7 @@ static AVFrame *convertFrameToRGB24(const AVFrame *frame) {
     return outFrame;
 }
 
-void initRender() {
+void init_render() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -155,7 +154,7 @@ void initRender() {
         "    vTexPos = texPos;\n"
         "}";
     logRender("compiling vertex shader:\n%s\n", code);
-    verShader = compileShader(code, GL_VERTEX_SHADER);
+    verShader = compile_shader(code, GL_VERTEX_SHADER);
     code =
         "#version 330 core\n"
         "in vec2 vTexPos;\n"
@@ -164,7 +163,7 @@ void initRender() {
         "    gl_FragColor = texture(tex, vTexPos);\n"
         "}";
     logRender("compiling fragment shader:\n%s\n", code);
-    fragShader = compileShader(code, GL_FRAGMENT_SHADER);
+    fragShader = compile_shader(code, GL_FRAGMENT_SHADER);
     glAttachShader(program, verShader);
     glAttachShader(program, fragShader);
     glLinkProgram(program);
@@ -203,8 +202,8 @@ void initRender() {
     glUniform1i(glGetUniformLocation(program, "tex"), 0);
 }
 
-void processVideoFrame(const AVFrame *frame) {
-    AVFrame *rgbFrame = convertFrameToRGB24(frame);
-    renderFrame(rgbFrame);
+void process_video_frame(const PlayContext *ctx, const AVFrame *frame) {
+    AVFrame *rgbFrame = convert_frame_to_rgb24(frame);
+    render_frame(ctx, rgbFrame);
     av_frame_free(&rgbFrame);
 }

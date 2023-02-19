@@ -14,7 +14,7 @@ static ALCcontext *a_ctx;
 static ALuint a_buf[NB_AL_BUFFER];
 static ALuint a_src;
 
-static void checkALError(const char *msg) {
+static void check_al_error(const char *msg) {
     ALuint error;
     if ((error = alGetError()) != AL_NO_ERROR) {
         logAudioE("%s: %d\n", msg, error);
@@ -23,7 +23,7 @@ static void checkALError(const char *msg) {
 }
 
 // 转为双声道、Signed 16-bits int
-static AVFrame *convertFrameToStereoS16(const AVFrame *frame) {
+static AVFrame *convert_frame_to_stereo_s16(const AVFrame *frame) {
     int ret;
     SwrContext *ctx = NULL;
     AVChannelLayout cl = AV_CHANNEL_LAYOUT_STEREO;
@@ -61,7 +61,7 @@ static AVFrame *convertFrameToStereoS16(const AVFrame *frame) {
     return outFrame;
 }
 
-static void playAudioFrame(const AVFrame *frame) {
+static void play_audio_frame(const PlayContext *ctx, const AVFrame *frame) {
     static int posIn;
     ALuint buf;
 
@@ -83,7 +83,7 @@ static void playAudioFrame(const AVFrame *frame) {
         logAudio("pending[%d]: %d\n", queued, buf);
         alBufferData(buf, AL_FORMAT_STEREO16, frame->data[0],
                      frame->linesize[0], frame->sample_rate);
-        checkALError("BufferData");
+        check_al_error("BufferData");
         pending[pending_filled++] = buf;
         posIn++;
     }
@@ -91,7 +91,7 @@ static void playAudioFrame(const AVFrame *frame) {
     if (pending_filled == pending_space) {
         logAudio("queuing %d frame\n", pending_space);
         alSourceQueueBuffers(a_src, pending_space, pending);
-        checkALError("Queue");
+        check_al_error("Queue");
         pending_space = NB_AL_BUFFER;
         pending_filled = 0;
         usleep(1000 * 150);
@@ -102,14 +102,14 @@ static void playAudioFrame(const AVFrame *frame) {
     if (state != AL_PLAYING) {
         logAudio("not playing\n");
         alSourcePlay(a_src);
-        checkALError("Play");
+        check_al_error("Play");
     }
 
     alGetSourcei(a_src, AL_BUFFERS_PROCESSED, &processed);
     if (processed > 0) {
         ALuint unqueued[NB_AL_BUFFER];
         alSourceUnqueueBuffers(a_src, processed, unqueued);
-        checkALError("Unqueue");
+        check_al_error("Unqueue");
         pending_space = processed;
         pending_filled = 0;
         logAudio("unqueue[%d]: ", processed);
@@ -120,7 +120,7 @@ static void playAudioFrame(const AVFrame *frame) {
     }
 }
 
-void initAudioPlay() {
+void init_audio_play() {
     a_dev = alcOpenDevice(NULL);
     if (!a_dev) {
         logAudioE("failed to open audio device\n");
@@ -136,10 +136,10 @@ void initAudioPlay() {
 
     alGetError();
     alGenBuffers(NB_AL_BUFFER, a_buf);
-    checkALError("alGenBuffers");
+    check_al_error("alGenBuffers");
 
     alGenSources(1, &a_src);
-    checkALError("alGenSources");
+    check_al_error("alGenSources");
 
     alSourcei(a_src, AL_PITCH, 1);    // 音调乘数
     alSourcef(a_src, AL_GAIN, 0.2);   // 增益
@@ -152,8 +152,8 @@ end:
     a_dev = NULL;
 }
 
-void processAudioFrame(const AVFrame *frame) {
-    AVFrame *s16Frame = convertFrameToStereoS16(frame);
-    playAudioFrame(s16Frame);
+void process_audio_frame(const PlayContext *ctx, const AVFrame *frame) {
+    AVFrame *s16Frame = convert_frame_to_stereo_s16(frame);
+    play_audio_frame(ctx, s16Frame);
     av_frame_free(&s16Frame);
 }

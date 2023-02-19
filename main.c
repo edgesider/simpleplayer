@@ -18,18 +18,17 @@
 
 #include "audio.h"
 #include "codec.h"
-#include "context.h"
 #include "list.h"
 #include "video.h"
 
 // av_format_open_input会同时作为输入/输出读取，所以需要初始化为NULL
-AVFormatContext *fc = NULL;
-AVStream *vStream = NULL, *aStream = NULL;
-const AVCodec *vCodec = NULL, *aCodec = NULL;
-AVCodecContext *vCC = NULL, *aCC = NULL;
+static AVFormatContext *fc = NULL;
+static AVStream *v_stream = NULL, *a_stream = NULL;
+static const AVCodec *v_codec = NULL, *a_codec = NULL;
+static AVCodecContext *v_cc = NULL, *a_cc = NULL;
 
-static AVStream *findStreamByType(const AVFormatContext *fc,
-                                  enum AVMediaType type) {
+static AVStream *find_stream_by_type(const AVFormatContext *fc,
+                                     enum AVMediaType type) {
     AVStream *stream;
     for (int i = 0; i < fc->nb_streams; i++) {
         stream = fc->streams[i];
@@ -40,8 +39,8 @@ static AVStream *findStreamByType(const AVFormatContext *fc,
     return NULL;
 }
 
-static void getCodec(const AVStream *stream, const AVCodec **outCodec,
-                     AVCodecContext **outCodecCtx) {
+static void get_codec(const AVStream *stream, const AVCodec **outCodec,
+                      AVCodecContext **outCodecCtx) {
     int ret;
     const AVCodec *codec;
     AVCodecContext *cc;
@@ -69,135 +68,40 @@ static void getCodec(const AVStream *stream, const AVCodec **outCodec,
     *outCodecCtx = cc;
 }
 
-static void processFrame(const AVFrame *frame, enum AVMediaType type) {
-    switch (type) {
-        case AVMEDIA_TYPE_VIDEO: processVideoFrame(frame); break;
-        case AVMEDIA_TYPE_AUDIO: processAudioFrame(frame); break;
-        default:
-            logCodecE("unsupported frame type: %s\n",
-                      av_get_media_type_string(type));
-    }
-}
-
-static AVCodecContext *getCodecContextForPacket(const AVPacket *pkt) {
-    if (pkt->stream_index == vStream->index) {
-        return vCC;
-    }
-    if (pkt->stream_index == aStream->index) {
-        return aCC;
-    }
-    return NULL;
-}
-
-static void putPacketToCodecContext(const AVPacket *pkt, AVCodecContext *cc) {
-    int ret;
-    AVFrame *frame;
-
-    if ((frame = av_frame_alloc()) == NULL) {
-        averror(AVERROR_UNKNOWN, "alloc frame");
-    }
-
-    // avcodec send_packet
-    if ((ret = avcodec_send_packet(cc, pkt)) != 0) {
-        averror(ret, "send packet");
-    }
-
-    int draining = pkt == NULL;
-
-    // avcodec receive_frame
-    for (int n_frame = 0;; n_frame++) {
-        ret = avcodec_receive_frame(cc, frame);
-        int done = 0;
-        if (ret == AVERROR(EAGAIN)) {
-            if (draining) {
-                error("not in draining mode but packet is null");
-            }
-            done = 1;
-        } else if (ret == AVERROR_EOF && draining) {
-            done = 1;
-        } else if (ret != 0) {
-            averror(ret, "receive frame");
-        }
-        // @see 关于time_base https://www.jianshu.com/p/bf323cee3b8e
-        logCodec("parsed new frame[%d]: type=%s, pts=%ld\n", n_frame,
-                 av_get_media_type_string(cc->codec_type),
-                 cc->codec_type == AVMEDIA_TYPE_VIDEO ? frame->pts : 0  // TODO
-        );
-
-        if (frame->format >= 0) {
-            processFrame(frame, cc->codec_type);
-        }
-        av_frame_unref(frame);
-
-        if (done) {
-            // 当前包解析完毕
-            break;
-        }
-    }
-    av_frame_free(&frame);
-}
-
-void processPacket(const AVPacket *pkt) {
-    if (!pkt) {
-        // draining mode
-        logCodec("enter draining mode\n");
-        if (aCC) {
-            putPacketToCodecContext(NULL, aCC);
-        }
-        if (vCC) {
-            putPacketToCodecContext(NULL, vCC);
-        }
-        return;
-    }
-    enum AVMediaType pkt_type =
-        fc->streams[pkt->stream_index]->codecpar->codec_type;
-    AVCodecContext *cc = getCodecContextForPacket(pkt);
-
-    if (!cc) {
-        logCodecE("no codec available for pkt: stream=%d, type=%d",
-                  pkt->stream_index, pkt_type);
-        return;
-    }
-
-    putPacketToCodecContext(pkt, cc);
-}
-
-void initDecode(const char *file) {
+static void init_decode(const char *file) {
     int ret;
 
-    // avformat 打开文件输入
+    // 打开文件输入
     if ((ret = avformat_open_input(&fc, file, NULL, NULL)) != 0) {
         averror(ret, "open_input");
     }
 
-    // avformat
     // 有的封装格式的流信息在Packet里面，这个函数会读取这些Packet得到流信息
     if ((ret = avformat_find_stream_info(fc, NULL)) < 0) {
         averror(ret, "find_stream_info");
     }
 
-    vStream = findStreamByType(fc, AVMEDIA_TYPE_VIDEO);
-    aStream = findStreamByType(fc, AVMEDIA_TYPE_AUDIO);
-    if (!vStream && !aStream) {
-        logCodecE("no available stream found\n");
-        exit(-1);
+    v_stream = find_stream_by_type(fc, AVMEDIA_TYPE_VIDEO);
+    a_stream = find_stream_by_type(fc, AVMEDIA_TYPE_AUDIO);
+    if (!v_stream && !a_stream) {
+        error("no available stream found");
     }
-    if (vStream) {
-        getCodec(vStream, &vCodec, &vCC);
+    if (v_stream) {
+        get_codec(v_stream, &v_codec, &v_cc);
     }
-    if (aStream) {
-        getCodec(aStream, &aCodec, &aCC);
+    if (a_stream) {
+        get_codec(a_stream, &a_codec, &a_cc);
     }
 }
 
 #ifdef TEST
 void test() {
-    /* testList(); */
+    test_list();
     test_queue();
 }
 #endif
 
-void printVersions() {
+void print_versions() {
     char *alVersion = "unknown";
 #ifdef AL_VERSION_1_1
     alVersion = "1.1";
@@ -224,28 +128,25 @@ int main(int argc, char *argv[]) {
         dprintf(2, "usage: %s FILE\n", argv[0]);
         return -1;
     }
-
-    initDecode(argv[1]);
-
-    /* av_log_set_level(AV_LOG_TRACE); */
+    init_decode(argv[1]);
 
     PlayContext *v_ctx = NULL, *a_ctx = NULL;
-    if (vCC) {
+    if (v_cc) {
         v_ctx = malloc(sizeof(PlayContext));
         *v_ctx = (PlayContext){
             .media_type = AVMEDIA_TYPE_VIDEO,
-            .stream = vStream,
-            .cc = vCC,
+            .stream = v_stream,
+            .cc = v_cc,
         };
         queue_init(&v_ctx->pkt_queue);
         queue_init(&v_ctx->frame_queue);
     }
-    if (aCC) {
+    if (a_cc) {
         a_ctx = malloc(sizeof(PlayContext));
         *a_ctx = (PlayContext){
             .media_type = AVMEDIA_TYPE_AUDIO,
-            .stream = aStream,
-            .cc = aCC,
+            .stream = a_stream,
+            .cc = a_cc,
         };
         queue_init(&a_ctx->pkt_queue);
         queue_init(&a_ctx->frame_queue);
