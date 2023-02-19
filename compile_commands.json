@@ -1,0 +1,130 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "main.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/main.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "video.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/video.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "audio.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/audio.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "utils.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/utils.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "codec.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/codec.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "list.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/list.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "queue.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/queue.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-I./libs/ffmpeg5.1.2/include",
+      "-I./libs/glad/include",
+      "-Wall",
+      "-o",
+      "main",
+      "libs/glad/src/glad.c"
+    ],
+    "directory": "/home/kai/test_lang/ffmpeg",
+    "file": "/home/kai/test_lang/ffmpeg/libs/glad/src/glad.c",
+    "output": "/home/kai/test_lang/ffmpeg/main"
+  }
+]
