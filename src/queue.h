@@ -29,8 +29,4 @@ void *queue_dequeue(Queue *queue);
 void queue_enqueue_wait(Queue *queue, void *data, QueuePrediction pred);
 void *queue_dequeue_wait(Queue *queue, QueuePrediction pred);
 
-#ifdef TEST
-void test_queue();
-#endif
-
 #endif /* ifndef _QUEUE_H_ */

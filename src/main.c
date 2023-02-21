@@ -1,20 +1,4 @@
-// clang-format off
-#include <glad/glad.h>
-// clang-format on
-
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <GLFW/glfw3.h>
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/error.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/pixfmt.h>
-#include <libswresample/swresample.h>
-#include <libswscale/swscale.h>
-#include <math.h>
 #include <pthread.h>
-#include <unistd.h>
 
 #include "audio.h"
 #include "codec.h"
@@ -94,35 +78,7 @@ static void init_decode(const char *file) {
     }
 }
 
-#ifdef TEST
-void test() {
-    test_list();
-    test_queue();
-}
-#endif
-
-void print_versions() {
-    char *alVersion = "unknown";
-#ifdef AL_VERSION_1_1
-    alVersion = "1.1";
-#else
-    alVersion = "1.0";
-#endif
-
-    dprintf(2,
-            "FFmpeg version %s\n"
-            "OpenGL version %d.%d\n"
-            "OpenAL version: %s\n",
-            av_version_info(), GLVersion.major, GLVersion.minor, alVersion);
-}
-
 int main(int argc, char *argv[]) {
-#ifdef TEST
-    printf("testing...\n");
-    test();
-    printf("all test passed\n");
-    return 0;
-#endif
 
     if (argc != 2) {
         dprintf(2, "usage: %s FILE\n", argv[0]);

@@ -2,15 +2,16 @@
 #include <glad/glad.h>
 // clang-format on
 
-// 图像渲染相关
 #include <GLFW/glfw3.h>
 #include <libavutil/frame.h>
-#include <libavutil/time.h>
 #include <libavutil/pixdesc.h>
+#include <libavutil/time.h>
 #include <libswscale/swscale.h>
 
-#include "utils.h"
+// 图像渲染相关
 #include "video.h"
+
+#include "utils.h"
 
 static GLFWwindow *window;
 static uint texture = -1, program = -1;
@@ -93,7 +94,7 @@ static AVFrame *convert_frame_to_rgb24(const AVFrame *frame) {
         return newFrame;
     }
     logRender("frame is in %s format, not rgb24, converting...\n",
-             av_get_pix_fmt_name(frame->format));
+              av_get_pix_fmt_name(frame->format));
     struct SwsContext *sc = sws_getContext(
         frame->width, frame->height, frame->format, frame->width, frame->height,
         AV_PIX_FMT_RGB24, SWS_SPLINE, NULL, NULL, NULL);

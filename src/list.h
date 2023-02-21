@@ -30,13 +30,4 @@ unsigned int list_length(struct list_node *node);
             ptr != node; \
             ptr = ptr->next)
 
-// #define TEST
-#ifdef TEST
-struct TestObj {
-    char name;
-    struct list_node list;
-};
-
-void test_list();
-#endif
 #endif
