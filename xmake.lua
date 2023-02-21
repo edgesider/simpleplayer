@@ -12,8 +12,6 @@ target('base')
 set_kind('phony')
 add_links('openal', 'pthread', 'glfw', { public = true })
 add_includedirs('packages/glad/include', { public = true })
-add_files('packages/glad/src/glad.c', { public = true })
-add_packages('glad', { public = true })
 add_packages('glfw', { public = true })
 add_packages('ffmpeg', {
     public = true,

@@ -18,7 +18,7 @@ void queue_init(Queue *q) {
     }
 }
 
-void queue_enqueue_locked(Queue *queue, void *data) {
+void queue_enqueue_nolock(Queue *queue, void *data) {
     QueueNode *q_node = malloc(sizeof(QueueNode));
     q_node->data = data;
     list_add(queue->nodes.queue.prev, &q_node->queue);
@@ -28,7 +28,7 @@ void queue_enqueue_locked(Queue *queue, void *data) {
     }
 }
 
-void *queue_dequeue_locked(Queue *queue) {
+void *queue_dequeue_nolock(Queue *queue) {
     if (queue->length == 0) {
         return NULL;
     }
@@ -45,19 +45,19 @@ void *queue_dequeue_locked(Queue *queue) {
 
 void queue_enqueue(Queue *queue, void *data) {
     pthread_mutex_lock(&queue->lock);
-    queue_enqueue_locked(queue, data);
+    queue_enqueue_nolock(queue, data);
     pthread_mutex_unlock(&queue->lock);
 }
 
 void *queue_dequeue(Queue *queue) {
     void *v;
     pthread_mutex_lock(&queue->lock);
-    v = queue_dequeue_locked(queue);
+    v = queue_dequeue_nolock(queue);
     pthread_mutex_unlock(&queue->lock);
     return v;
 }
 
-void queue_wait_locked(Queue *queue, QueuePrediction pred) {
+void queue_wait_nolock(Queue *queue, QueuePrediction pred) {
     while (!pred(queue)) {
         int ret;
         if ((ret = pthread_cond_wait(&queue->on_changed, &queue->lock)) != 0) {
@@ -70,8 +70,8 @@ void queue_enqueue_wait(Queue *queue, void *data, QueuePrediction pred) {
     if (pthread_mutex_lock(&queue->lock) != 0) {
         error("pthread_mutex_lock");
     }
-    queue_wait_locked(queue, pred);
-    queue_enqueue_locked(queue, data);
+    queue_wait_nolock(queue, pred);
+    queue_enqueue_nolock(queue, data);
     if (pthread_mutex_unlock(&queue->lock) != 0) {
         error("pthread_mutex_unlock");
     }
@@ -82,8 +82,8 @@ void *queue_dequeue_wait(Queue *queue, QueuePrediction pred) {
     if (pthread_mutex_lock(&queue->lock) != 0) {
         error("pthread_mutex_lock");
     }
-    queue_wait_locked(queue, pred);
-    v = queue_dequeue_locked(queue);
+    queue_wait_nolock(queue, pred);
+    v = queue_dequeue_nolock(queue);
     if (pthread_mutex_unlock(&queue->lock) != 0) {
         error("pthread_mutex_unlock");
     }

@@ -1,91 +1,91 @@
 [
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/src/list.c.o", "src/list.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/src/list.c.o", "src/list.c"],
   "file": "src/list.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/src/video.c.o", "src/video.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/src/video.c.o", "src/video.c"],
   "file": "src/video.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/src/utils.c.o", "src/utils.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/src/utils.c.o", "src/utils.c"],
   "file": "src/utils.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/src/audio.c.o", "src/audio.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/src/audio.c.o", "src/audio.c"],
   "file": "src/audio.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/src/main.c.o", "src/main.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/src/main.c.o", "src/main.c"],
   "file": "src/main.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/src/queue.c.o", "src/queue.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/src/queue.c.o", "src/queue.c"],
   "file": "src/queue.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/src/codec.c.o", "src/codec.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/src/codec.c.o", "src/codec.c"],
   "file": "src/codec.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp/linux/x86_64/release/packages/glad/src/glad.c.o", "packages/glad/src/glad.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp/linux/x86_64/debug/packages/glad/src/glad.c.o", "packages/glad/src/glad.c"],
   "file": "packages/glad/src/glad.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/test/list.c.o", "test/list.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/test/list.c.o", "test/list.c"],
   "file": "test/list.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/test/queue.c.o", "test/queue.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/test/queue.c.o", "test/queue.c"],
   "file": "test/queue.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/test/test.c.o", "test/test.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/test/test.c.o", "test/test.c"],
   "file": "test/test.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/src/list.c.o", "src/list.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/src/list.c.o", "src/list.c"],
   "file": "src/list.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/src/video.c.o", "src/video.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/src/video.c.o", "src/video.c"],
   "file": "src/video.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/src/utils.c.o", "src/utils.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/src/utils.c.o", "src/utils.c"],
   "file": "src/utils.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/src/audio.c.o", "src/audio.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/src/audio.c.o", "src/audio.c"],
   "file": "src/audio.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/src/queue.c.o", "src/queue.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/src/queue.c.o", "src/queue.c"],
   "file": "src/queue.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/src/codec.c.o", "src/codec.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/src/codec.c.o", "src/codec.c"],
   "file": "src/codec.c"
 },
 {
   "directory": "/home/kai/test_lang/ffmpeg",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-DNDEBUG", "-o", "build/.objs/sp-test/linux/x86_64/release/packages/glad/src/glad.c.o", "packages/glad/src/glad.c"],
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-g", "-O0", "-Ipackages/glad/include", "-D_GLFW_X11", "-DGLFW_INCLUDE_NONE", "-I", "/home/kai/.xmake/packages/g/glfw/3.3.8/aa037e96cc854680a09e144c4b5c8fe0/include", "-I", "/usr/include/python3.10", "-I", "/usr/include/X11/dri", "-I", "/home/kai/.xmake/packages/f/ffmpeg/5.1.2/a43c6875666b462189036ec7a2eca2e7/include", "-o", "build/.objs/sp-test/linux/x86_64/debug/packages/glad/src/glad.c.o", "packages/glad/src/glad.c"],
   "file": "packages/glad/src/glad.c"
 }]

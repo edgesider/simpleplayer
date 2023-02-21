@@ -217,7 +217,7 @@ void *audio_play_thread(PlayContext *ctx) {
     for (;;) {
         frame = queue_dequeue_wait(q, has_data);
         if (!frame) {
-            logRender("[video-play] EOS\n");
+            logRender("[audio-play] EOS\n");
             break;
         }
         process_audio_frame(ctx, frame);

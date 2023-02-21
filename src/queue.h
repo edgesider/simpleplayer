@@ -19,9 +19,9 @@ typedef int (*QueuePrediction)(Queue *queue);
 
 void queue_init(Queue *q);
 
-void queue_enqueue_locked(Queue *queue, void *data);
-void *queue_dequeue_locked(Queue *queue);
-void queue_wait_locked(Queue *queue, QueuePrediction pred);
+void queue_enqueue_nolock(Queue *queue, void *data);
+void *queue_dequeue_nolock(Queue *queue);
+void queue_wait_nolock(Queue *queue, QueuePrediction pred);
 
 void queue_enqueue(Queue *queue, void *data);
 void *queue_dequeue(Queue *queue);
