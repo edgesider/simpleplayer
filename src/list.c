@@ -23,4 +23,3 @@ unsigned int list_length(struct list_node *node) {
     for (ptr = node->next; ptr != node; ptr = ptr->next, count++) {}
     return count;
 }
-

@@ -1,9 +1,9 @@
 #ifndef _CODEC_H_
 #define _CODEC_H_
 
+#include <libavcodec/avcodec.h>
 #include <libavcodec/packet.h>
 #include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
 #include <libavutil/frame.h>
 
 #include "queue.h"

@@ -9,9 +9,8 @@
 #include <libswscale/swscale.h>
 
 // 图像渲染相关
-#include "video.h"
-
 #include "utils.h"
+#include "video.h"
 
 static GLFWwindow *window;
 static uint texture = -1, program = -1;

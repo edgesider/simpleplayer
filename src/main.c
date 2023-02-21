@@ -79,7 +79,6 @@ static void init_decode(const char *file) {
 }
 
 int main(int argc, char *argv[]) {
-
     if (argc != 2) {
         dprintf(2, "usage: %s FILE\n", argv[0]);
         return -1;

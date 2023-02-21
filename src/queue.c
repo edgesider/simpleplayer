@@ -1,6 +1,6 @@
-#include <pthread.h>
-
 #include "queue.h"
+
+#include <pthread.h>
 
 void queue_init(Queue *q) {
     q->length = 0;

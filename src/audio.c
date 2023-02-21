@@ -1,11 +1,12 @@
-#include <stdlib.h>
+#include "audio.h"
+
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <libswresample/swresample.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "utils.h"
-#include "audio.h"
 
 // 音频播放相关
 #define NB_AL_BUFFER 64

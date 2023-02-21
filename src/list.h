@@ -17,17 +17,16 @@ struct list_node {
 };
 
 void list_node_init(struct list_node *node);
-
-#define list_object(node_ptr, type, member) \
-    ((type *)((unsigned long)(node_ptr) - offsetof(type, member)))
-
 void list_del(struct list_node *node);
 void list_add(struct list_node *node, struct list_node *to_add);
 unsigned int list_length(struct list_node *node);
 
+// clang-format off
+#define list_object(node_ptr, type, member) \
+    ((type *)((unsigned long)(node_ptr) - offsetof(type, member)))
+
 #define list_foreach(ptr, node) \
-    for (struct list_node *ptr = (node)->next; \
-            ptr != node; \
-            ptr = ptr->next)
+    for (struct list_node *ptr = (node)->next; ptr != node; ptr = ptr->next)
+// clang-format on
 
 #endif
