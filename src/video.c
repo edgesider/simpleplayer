@@ -7,6 +7,7 @@
 #include <libavutil/pixdesc.h>
 #include <libavutil/time.h>
 #include <libswscale/swscale.h>
+#include <pthread.h>
 
 // 图像渲染相关
 #include "utils.h"
@@ -118,7 +119,7 @@ static AVFrame *convert_frame_to_rgb24(const AVFrame *frame) {
     return outFrame;
 }
 
-void init_render() {
+static void init_render() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -202,8 +203,32 @@ void init_render() {
     glUniform1i(glGetUniformLocation(program, "tex"), 0);
 }
 
-void process_video_frame(const PlayContext *ctx, const AVFrame *frame) {
+static void process_video_frame(PlayContext *ctx, const AVFrame *frame) {
     AVFrame *rgbFrame = convert_frame_to_rgb24(frame);
     render_frame(ctx, rgbFrame);
     av_frame_free(&rgbFrame);
+}
+
+void *video_play_thread(PlayContext *ctx) {
+    AVFrame *frame;
+    Queue *q;
+
+    logRender("[video-play] tid=%lu\n", pthread_self());
+    init_render();
+    q = &ctx->frame_queue;
+
+    for (;;) {
+        frame = queue_dequeue_wait(q, queue_has_data);
+        if (!frame) {
+            logRender("[video-play] EOS\n");
+            break;
+        }
+        ctx->play_time = pts_to_microseconds(ctx, frame->pts);
+        logAudio("video play: curr_time=%f\n", ctx->play_time / 1000.0 / 1000);
+        process_video_frame(ctx, frame);
+        av_frame_free(&frame);
+    }
+    logRender("[video-play] finished\n");
+
+    return NULL;
 }

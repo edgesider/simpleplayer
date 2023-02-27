@@ -16,22 +16,23 @@
 #include "utils.h"
 #include "video.h"
 
+#define PKT_QUEUE_SIZE 10
+#define FRAME_QUEUE_SIZE 40
+
 static int packet_can_queue(Queue *q) {
-    if (q->length > 50) {
+    if (q->length > PKT_QUEUE_SIZE) {
         logCodec("packet queue is full\n");
+        /* logAudio("packet queue is full\n"); */
     }
-    return q->length <= 50;
+    return q->length <= PKT_QUEUE_SIZE;
 }
 
 static int frame_can_queue(Queue *q) {
-    if (q->length > 50) {
+    if (q->length > FRAME_QUEUE_SIZE) {
         logCodec("frame queue is full\n");
+        /* logAudio("frame queue is full\n"); */
     }
-    return q->length <= 50;
-}
-
-static int has_data(Queue *q) {
-    return q->length > 0;
+    return q->length <= FRAME_QUEUE_SIZE;
 }
 
 static PlayContext *get_play_context_for_packet(DemuxContext *ctx,
@@ -65,11 +66,17 @@ static void enqueue_packet(DemuxContext *ctx, AVPacket *pkt) {
         ctx->fc->streams[pkt->stream_index]->codecpar->codec_type;
     PlayContext *play_ctx = get_play_context_for_packet(ctx, pkt);
     if (!play_ctx) {
-        logCodecE("no PlayContext available for pkt: stream=%d, type=%d",
-                  pkt->stream_index, pkt_type);
+        logCodecE("no PlayContext available for pkt: stream=%d, type=%s",
+                  pkt->stream_index, av_get_media_type_string(pkt_type));
         return;
     }
-    queue_enqueue_wait(&play_ctx->pkt_queue, pkt, packet_can_queue);
+    if (play_ctx->media_type == AVMEDIA_TYPE_VIDEO) {
+        queue_enqueue(&play_ctx->pkt_queue, pkt);
+        logCodec("video packet queue size: %d\n", play_ctx->pkt_queue.length);
+    } else {
+        queue_enqueue_wait(&play_ctx->pkt_queue, pkt, packet_can_queue);
+        logCodec("audio packet queue size: %d\n", play_ctx->pkt_queue.length);
+    }
     logCodec("enqueued packet, type=%s\n",
              av_get_media_type_string(play_ctx->cc->codec_type));
 }
@@ -142,7 +149,14 @@ static void decode_packet(PlayContext *ctx, const AVPacket *pkt) {
             // @see 关于time_base https://www.jianshu.com/p/bf323cee3b8e
             logCodec("parsed new frame[%d]: type=%s, pts=%ld\n", n_frame,
                      av_get_media_type_string(cc->codec_type), frame->pts);
-            queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue);
+            if (cc->codec_type == AVMEDIA_TYPE_VIDEO) {
+                logCodec("video frame queue size: %d\n", ctx->frame_queue.length);
+                queue_enqueue(&ctx->frame_queue, frame);
+                /* queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue); */
+            } else {
+                logCodec("audio frame queue size: %d\n", ctx->frame_queue.length);
+                queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue);
+            }
         }
 
         if (done) {
@@ -164,7 +178,7 @@ void *decode_thread(PlayContext *ctx) {
     q = &ctx->pkt_queue;
 
     for (;;) {
-        pkt = queue_dequeue_wait(q, has_data);
+        pkt = queue_dequeue_wait(q, queue_has_data);
         if (!pkt) {
             // 收到空packet之后，进入draining模式，让解码器输出缓存的帧
             logCodec("[%s-decode] got null packet\n", media_type_str);
@@ -184,46 +198,7 @@ void *decode_thread(PlayContext *ctx) {
     return NULL;
 }
 
-void *video_play_thread(PlayContext *ctx) {
-    AVFrame *frame;
-    Queue *q;
-
-    logRender("[video-play] tid=%lu\n", pthread_self());
-    init_render();
-    q = &ctx->frame_queue;
-
-    for (;;) {
-        frame = queue_dequeue_wait(q, has_data);
-        if (!frame) {
-            logRender("[video-play] EOS\n");
-            break;
-        }
-        process_video_frame(ctx, frame);
-        av_frame_free(&frame);
-    }
-    logRender("[video-play] finished\n");
-
-    return NULL;
-}
-
-void *audio_play_thread(PlayContext *ctx) {
-    AVFrame *frame;
-    Queue *q;
-
-    logRender("[audio-play] tid=%lu\n", pthread_self());
-    init_audio_play();
-    q = &ctx->frame_queue;
-
-    for (;;) {
-        frame = queue_dequeue_wait(q, has_data);
-        if (!frame) {
-            logRender("[audio-play] EOS\n");
-            break;
-        }
-        process_audio_frame(ctx, frame);
-        av_frame_free(&frame);
-    }
-
-    logRender("[audio-play] finished\n");
-    return NULL;
+int64_t pts_to_microseconds(const PlayContext *ctx, int64_t pts) {
+    AVRational time_base = ctx->stream->time_base;
+    return pts * time_base.num * 1000 * 1000 / time_base.den;
 }

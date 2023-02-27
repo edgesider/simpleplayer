@@ -29,4 +29,8 @@ void *queue_dequeue(Queue *queue);
 void queue_enqueue_wait(Queue *queue, void *data, QueuePrediction pred);
 void *queue_dequeue_wait(Queue *queue, QueuePrediction pred);
 
+static int queue_has_data(Queue *q) {
+    return q->length > 0;
+}
+
 #endif /* ifndef _QUEUE_H_ */

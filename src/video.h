@@ -5,7 +5,6 @@
 
 #include "codec.h"
 
-void init_render();
-void process_video_frame(const PlayContext *ctx, const AVFrame *frame);
+void *video_play_thread(PlayContext *params);
 
 #endif /* ifndef _VIDEO_H_ */

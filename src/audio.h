@@ -5,7 +5,6 @@
 
 #include "codec.h"
 
-void init_audio_play();
-void process_audio_frame(const PlayContext *ctx, const AVFrame *frame);
+void *audio_play_thread(PlayContext *params);
 
 #endif /* ifndef _AUDIO_H_ */

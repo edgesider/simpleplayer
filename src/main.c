@@ -92,6 +92,7 @@ int main(int argc, char *argv[]) {
             .media_type = AVMEDIA_TYPE_VIDEO,
             .stream = v_stream,
             .cc = v_cc,
+            .play_time = 0,
         };
         queue_init(&v_ctx->pkt_queue);
         queue_init(&v_ctx->frame_queue);
@@ -102,6 +103,7 @@ int main(int argc, char *argv[]) {
             .media_type = AVMEDIA_TYPE_AUDIO,
             .stream = a_stream,
             .cc = a_cc,
+            .play_time = 0,
         };
         queue_init(&a_ctx->pkt_queue);
         queue_init(&a_ctx->frame_queue);

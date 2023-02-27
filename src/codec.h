@@ -13,6 +13,8 @@ typedef struct {
     Queue pkt_queue, frame_queue;
     AVCodecContext *cc;
     AVStream *stream;
+    // 当前播放位置
+    int64_t play_time;
 } PlayContext;
 
 typedef struct {
@@ -23,7 +25,7 @@ typedef struct {
 
 void *demux_thread(DemuxContext *ctx);
 void *decode_thread(PlayContext *params);
-void *video_play_thread(PlayContext *params);
-void *audio_play_thread(PlayContext *params);
+
+int64_t pts_to_microseconds(const PlayContext *ctx, int64_t pts);
 
 #endif
