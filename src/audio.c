@@ -42,7 +42,7 @@ static AVFrame *convert_frame_to_stereo_s16(const AVFrame *frame) {
 
     // TODO 共享Context
     swr_alloc_set_opts2(&ctx, &cl, AV_SAMPLE_FMT_S16, frame->sample_rate,
-                        (AVChannelLayout *)&frame->ch_layout, frame->format,
+                        (AVChannelLayout *) &frame->ch_layout, frame->format,
                         frame->sample_rate, 0, NULL);
     if (swr_init(ctx) != 0) {
         logAudio("swr_init failed");
@@ -59,7 +59,7 @@ static AVFrame *convert_frame_to_stereo_s16(const AVFrame *frame) {
         averror(ret, "av_frame_get_buffer");
     }
 
-    swr_convert(ctx, outFrame->data, samples, (const uint8_t **)frame->data,
+    swr_convert(ctx, outFrame->data, samples, (const uint8_t **) frame->data,
                 samples);
     swr_free(&ctx);
     return outFrame;
@@ -83,10 +83,10 @@ static int64_t get_time_millisec() {
     return t.tv_sec * 1000 + t.tv_usec / 1000;
 }
 
-static Queue pts_queue; // TODO 该队列可以同时用来维护AL队列的其他信息，如帧时长等
+static Queue
+    pts_queue;  // TODO 该队列可以同时用来维护AL队列的其他信息，如帧时长等
 
-static void alloc_buffer_and_queue(StreamContext *sc,
-                                   const AVFrame *frame) {
+static void alloc_buffer_and_queue(StreamContext *sc, const AVFrame *frame) {
     ALuint buf;
     // TODO 复用Buffer
     alGenBuffers(1, &buf);
@@ -97,7 +97,7 @@ static void alloc_buffer_and_queue(StreamContext *sc,
     check_al_error("alSourceQueueBuffers");
     queue_enqueue_nolock(
         &pts_queue,
-        (void *)pts_to_microseconds(sc, frame->pts));  // TODO 32bit support
+        (void *) pts_to_microseconds(sc, frame->pts));  // TODO 32bit support
 }
 
 static int free_buffers(StreamContext *sc) {
@@ -110,11 +110,11 @@ static int free_buffers(StreamContext *sc) {
 
         int64_t last_pts;
         for (int i = 0; i < processed; i++) {
-            last_pts = (int64_t)queue_dequeue_nolock(&pts_queue);
+            last_pts = (int64_t) queue_dequeue_nolock(&pts_queue);
         }
         sc->play_time = last_pts;
         logAudio("[audio-play] time updated: curr_time=%lf\n",
-                 sc->play_time / (double)1000.0 / 1000);
+                 sc->play_time / (double) 1000.0 / 1000);
     }
     return processed;
 }
@@ -185,7 +185,8 @@ static void play_audio_frame(StreamContext *sc, const AVFrame *frame) {
             check_al_error("alSourcePlay");
         }
         // 等待n帧 IDLE_WAIT_FRAMES
-        av_usleep(pts_to_microseconds(sc, frame->nb_samples * IDLE_WAIT_FRAMES));
+        av_usleep(
+            pts_to_microseconds(sc, frame->nb_samples * IDLE_WAIT_FRAMES));
     }
 
     alloc_buffer_and_queue(sc, frame);

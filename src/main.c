@@ -99,8 +99,8 @@ int main(int argc, char *argv[]) {
         };
         queue_init(&ctx.video_sc->pkt_queue);
         queue_init(&ctx.video_sc->frame_queue);
-        pthread_create(&t_v, NULL, (void *)decode_video_thread, &ctx);
-        pthread_create(&t_v_play, NULL, (void *)video_play_thread, &ctx);
+        pthread_create(&t_v, NULL, (void *) decode_video_thread, &ctx);
+        pthread_create(&t_v_play, NULL, (void *) video_play_thread, &ctx);
     }
     if (a_cc) {
         ctx.audio_sc = malloc(sizeof(StreamContext));
@@ -112,11 +112,11 @@ int main(int argc, char *argv[]) {
         };
         queue_init(&ctx.audio_sc->pkt_queue);
         queue_init(&ctx.audio_sc->frame_queue);
-        pthread_create(&t_a, NULL, (void *)decode_audio_thread, &ctx);
-        pthread_create(&t_a_play, NULL, (void *)audio_play_thread, &ctx);
+        pthread_create(&t_a, NULL, (void *) decode_audio_thread, &ctx);
+        pthread_create(&t_a_play, NULL, (void *) audio_play_thread, &ctx);
     }
 
-    pthread_create(&t_demux, NULL, (void *)demux_thread, &ctx);
+    pthread_create(&t_demux, NULL, (void *) demux_thread, &ctx);
     if (v_cc) {
         pthread_join(t_v, NULL);
         pthread_join(t_v_play, NULL);

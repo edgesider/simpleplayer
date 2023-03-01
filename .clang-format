@@ -9,6 +9,8 @@ AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
+SpaceAfterCStyleCast: true
+SortIncludes: true
 ---
 ...
 

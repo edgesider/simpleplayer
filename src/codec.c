@@ -36,7 +36,7 @@ static int frame_can_queue(Queue *q) {
 }
 
 static StreamContext *get_stream_context_for_packet(PlayContext *ctx,
-                                                const AVPacket *pkt) {
+                                                    const AVPacket *pkt) {
     if (ctx->video_sc && pkt->stream_index == ctx->video_sc->stream->index) {
         return ctx->video_sc;
     }
@@ -152,11 +152,14 @@ static void decode_packet(StreamContext *ctx, const AVPacket *pkt) {
             logCodec("parsed new frame[%d]: type=%s, pts=%ld\n", n_frame,
                      av_get_media_type_string(cc->codec_type), frame->pts);
             if (cc->codec_type == AVMEDIA_TYPE_VIDEO) {
-                logCodec("video frame queue size: %d\n", ctx->frame_queue.length);
+                logCodec("video frame queue size: %d\n",
+                         ctx->frame_queue.length);
                 queue_enqueue(&ctx->frame_queue, frame);
-                /* queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue); */
+                /* queue_enqueue_wait(&ctx->frame_queue, frame,
+                 * frame_can_queue); */
             } else {
-                logCodec("audio frame queue size: %d\n", ctx->frame_queue.length);
+                logCodec("audio frame queue size: %d\n",
+                         ctx->frame_queue.length);
                 queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue);
             }
         }

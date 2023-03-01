@@ -112,7 +112,7 @@ static AVFrame *convert_frame_to_rgb24(const AVFrame *frame) {
         averror(ret, "av_frame_get_buffer");
     }
 
-    sws_scale(sc, (const uint8_t *const *)frame->data, frame->linesize, 0,
+    sws_scale(sc, (const uint8_t *const *) frame->data, frame->linesize, 0,
               frame->height, outFrame->data, outFrame->linesize);
 
     sws_freeContext(sc);
@@ -134,7 +134,7 @@ static void init_render() {
     }
     glfwMakeContextCurrent(window);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         logRenderE("failed to initialize opengl\n");
         exit(-1);
     }
@@ -189,7 +189,7 @@ static void init_render() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5,
-                          (void *)(sizeof(float) * 3));
+                          (void *) (sizeof(float) * 3));
 
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0);
