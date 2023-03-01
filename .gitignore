@@ -3,3 +3,5 @@
 build
 .ninja*
 build.ninja
+
+compile_commands.json
