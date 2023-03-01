@@ -85,50 +85,43 @@ int main(int argc, char *argv[]) {
     }
     init_decode(argv[1]);
 
-    PlayContext *v_ctx = NULL, *a_ctx = NULL;
+    pthread_t t_a, t_a_play, t_v, t_v_play, t_demux;
+    PlayContext ctx = {0};
+
+    ctx.fc = fc;
     if (v_cc) {
-        v_ctx = malloc(sizeof(PlayContext));
-        *v_ctx = (PlayContext){
+        ctx.video_sc = malloc(sizeof(StreamContext));
+        *ctx.video_sc = (StreamContext){
             .media_type = AVMEDIA_TYPE_VIDEO,
             .stream = v_stream,
             .cc = v_cc,
             .play_time = 0,
         };
-        queue_init(&v_ctx->pkt_queue);
-        queue_init(&v_ctx->frame_queue);
+        queue_init(&ctx.video_sc->pkt_queue);
+        queue_init(&ctx.video_sc->frame_queue);
+        pthread_create(&t_v, NULL, (void *)decode_video_thread, &ctx);
+        pthread_create(&t_v_play, NULL, (void *)video_play_thread, &ctx);
     }
     if (a_cc) {
-        a_ctx = malloc(sizeof(PlayContext));
-        *a_ctx = (PlayContext){
+        ctx.audio_sc = malloc(sizeof(StreamContext));
+        *ctx.audio_sc = (StreamContext){
             .media_type = AVMEDIA_TYPE_AUDIO,
             .stream = a_stream,
             .cc = a_cc,
             .play_time = 0,
         };
-        queue_init(&a_ctx->pkt_queue);
-        queue_init(&a_ctx->frame_queue);
+        queue_init(&ctx.audio_sc->pkt_queue);
+        queue_init(&ctx.audio_sc->frame_queue);
+        pthread_create(&t_a, NULL, (void *)decode_audio_thread, &ctx);
+        pthread_create(&t_a_play, NULL, (void *)audio_play_thread, &ctx);
     }
-    DemuxContext demux_ctx = {
-        .fc = fc,
-        .v_ctx = v_ctx,
-        .a_ctx = a_ctx,
-    };
 
-    pthread_t t_a, t_a_play, t_v, t_v_play, t_demux;
-    if (v_ctx) {
-        pthread_create(&t_v, NULL, (void *)decode_thread, v_ctx);
-        pthread_create(&t_v_play, NULL, (void *)video_play_thread, v_ctx);
-    }
-    if (a_ctx) {
-        pthread_create(&t_a, NULL, (void *)decode_thread, a_ctx);
-        pthread_create(&t_a_play, NULL, (void *)audio_play_thread, a_ctx);
-    }
-    pthread_create(&t_demux, NULL, (void *)demux_thread, &demux_ctx);
-    if (v_ctx) {
+    pthread_create(&t_demux, NULL, (void *)demux_thread, &ctx);
+    if (v_cc) {
         pthread_join(t_v, NULL);
         pthread_join(t_v_play, NULL);
     }
-    if (a_ctx) {
+    if (a_cc) {
         pthread_join(t_a, NULL);
         pthread_join(t_a_play, NULL);
     }

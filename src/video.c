@@ -52,7 +52,7 @@ static void check_gl_error() {
     }
 }
 
-static void render_frame(const PlayContext *ctx, const AVFrame *frame) {
+static void render_frame(const StreamContext *ctx, const AVFrame *frame) {
     if (glfwWindowShouldClose(window)) {
         glfwTerminate();
         exit(-1);
@@ -203,19 +203,20 @@ static void init_render() {
     glUniform1i(glGetUniformLocation(program, "tex"), 0);
 }
 
-static void process_video_frame(PlayContext *ctx, const AVFrame *frame) {
+static void process_video_frame(StreamContext *ctx, const AVFrame *frame) {
     AVFrame *rgbFrame = convert_frame_to_rgb24(frame);
     render_frame(ctx, rgbFrame);
     av_frame_free(&rgbFrame);
 }
 
-void *video_play_thread(PlayContext *ctx) {
+void *video_play_thread(PlayContext *pc) {
     AVFrame *frame;
     Queue *q;
+    StreamContext *sc = pc->video_sc;
 
     logRender("[video-play] tid=%lu\n", pthread_self());
     init_render();
-    q = &ctx->frame_queue;
+    q = &sc->frame_queue;
 
     for (;;) {
         frame = queue_dequeue_wait(q, queue_has_data);
@@ -223,11 +224,11 @@ void *video_play_thread(PlayContext *ctx) {
             logRender("[video-play] EOS\n");
             break;
         }
-        ctx->play_time = pts_to_microseconds(ctx, frame->pts);
+        sc->play_time = pts_to_microseconds(sc, frame->pts);
         logRender("[video-play] time updated: curr_time=%f\n",
-                  ctx->play_time / 1000.0 / 1000);
+                  sc->play_time / 1000.0 / 1000);
         // TODO 丢帧和追帧
-        process_video_frame(ctx, frame);
+        process_video_frame(sc, frame);
         av_frame_free(&frame);
     }
     logRender("[video-play] finished\n");

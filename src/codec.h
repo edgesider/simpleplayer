@@ -15,17 +15,21 @@ typedef struct {
     AVStream *stream;
     // 当前播放位置
     int64_t play_time;
-} PlayContext;
+} StreamContext;
 
 typedef struct {
     AVFormatContext *fc;
-    PlayContext *v_ctx;
-    PlayContext *a_ctx;
-} DemuxContext;
+    StreamContext *video_sc;
+    StreamContext *audio_sc;
+} PlayContext;
 
-void *demux_thread(DemuxContext *ctx);
-void *decode_thread(PlayContext *params);
+void *demux_thread(PlayContext *ctx);
+void *decode_audio_thread(PlayContext *pc);
+void *decode_video_thread(PlayContext *pc);
 
-int64_t pts_to_microseconds(const PlayContext *ctx, int64_t pts);
+static int64_t pts_to_microseconds(const StreamContext *sc, int64_t pts) {
+    AVRational time_base = sc->stream->time_base;
+    return pts * time_base.num * 1000 * 1000 / time_base.den;
+}
 
 #endif

@@ -5,6 +5,6 @@
 
 #include "codec.h"
 
-void *video_play_thread(PlayContext *params);
+void *video_play_thread(PlayContext *pc);
 
 #endif /* ifndef _VIDEO_H_ */

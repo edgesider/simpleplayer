@@ -85,7 +85,7 @@ static int64_t get_time_millisec() {
 
 static Queue pts_queue; // TODO 该队列可以同时用来维护AL队列的其他信息，如帧时长等
 
-static void alloc_buffer_and_queue(PlayContext *ctx,
+static void alloc_buffer_and_queue(StreamContext *sc,
                                    const AVFrame *frame) {
     ALuint buf;
     // TODO 复用Buffer
@@ -97,10 +97,10 @@ static void alloc_buffer_and_queue(PlayContext *ctx,
     check_al_error("alSourceQueueBuffers");
     queue_enqueue_nolock(
         &pts_queue,
-        (void *)pts_to_microseconds(ctx, frame->pts));  // TODO 32bit support
+        (void *)pts_to_microseconds(sc, frame->pts));  // TODO 32bit support
 }
 
-static int free_buffers(PlayContext *ctx) {
+static int free_buffers(StreamContext *sc) {
     ALint processed;
     alGetSourcei(a_src, AL_BUFFERS_PROCESSED, &processed);
     if (processed > 0) {
@@ -112,9 +112,9 @@ static int free_buffers(PlayContext *ctx) {
         for (int i = 0; i < processed; i++) {
             last_pts = (int64_t)queue_dequeue_nolock(&pts_queue);
         }
-        ctx->play_time = last_pts;
+        sc->play_time = last_pts;
         logAudio("[audio-play] time updated: curr_time=%lf\n",
-                 ctx->play_time / (double)1000.0 / 1000);
+                 sc->play_time / (double)1000.0 / 1000);
     }
     return processed;
 }
@@ -126,11 +126,11 @@ static int free_buffers(PlayContext *ctx) {
 /**
  * 不断更新播放时间直到AL播放完成
  */
-void wait_remain_buffers(PlayContext *ctx) {
+void wait_remain_buffers(StreamContext *sc) {
     logAudio("[audio-play] EOS\n");
     ALint queued;
     for (;;) {
-        free_buffers(ctx);
+        free_buffers(sc);
         alGetSourcei(a_src, AL_BUFFERS_QUEUED, &queued);
         if (queued <= 0) {
             break;
@@ -140,7 +140,7 @@ void wait_remain_buffers(PlayContext *ctx) {
     }
 }
 
-static void play_audio_frame(PlayContext *ctx, const AVFrame *frame) {
+static void play_audio_frame(StreamContext *sc, const AVFrame *frame) {
     static int pos_in;
     ALuint buf;
 
@@ -174,7 +174,7 @@ static void play_audio_frame(PlayContext *ctx, const AVFrame *frame) {
     ALint state, queued, processed;
 
     for (int n = 0;; n++) {  // 等待队列有空间
-        free_buffers(ctx);
+        free_buffers(sc);
         alGetSourcei(a_src, AL_BUFFERS_QUEUED, &queued);
         if (queued < MAX_QUEUED_FRAMES) {
             break;
@@ -185,10 +185,10 @@ static void play_audio_frame(PlayContext *ctx, const AVFrame *frame) {
             check_al_error("alSourcePlay");
         }
         // 等待n帧 IDLE_WAIT_FRAMES
-        av_usleep(pts_to_microseconds(ctx, frame->nb_samples * IDLE_WAIT_FRAMES));
+        av_usleep(pts_to_microseconds(sc, frame->nb_samples * IDLE_WAIT_FRAMES));
     }
 
-    alloc_buffer_and_queue(ctx, frame);
+    alloc_buffer_and_queue(sc, frame);
     alGetSourcei(a_src, AL_BUFFERS_QUEUED, &queued);
     alGetSourcei(a_src, AL_SOURCE_STATE, &state);
     if (state != AL_PLAYING) {
@@ -229,33 +229,34 @@ end:
     a_dev = NULL;
 }
 
-static void convert_audio_frame(PlayContext *ctx, const AVFrame *frame) {
+static void convert_audio_frame(StreamContext *ctx, const AVFrame *frame) {
     AVFrame *s16Frame = convert_frame_to_stereo_s16(frame);
     play_audio_frame(ctx, s16Frame);
     av_frame_free(&s16Frame);
 }
 
-void *audio_play_thread(PlayContext *ctx) {
+void *audio_play_thread(PlayContext *pc) {
     AVFrame *frame;
     Queue *q;
-    AVRational time_base = ctx->stream->time_base;
+    StreamContext *sc = pc->audio_sc;
+    AVRational time_base = sc->stream->time_base;
     // 一帧的时长，单位微秒
-    int64_t frame_time = pts_to_microseconds(ctx, 1);
+    int64_t frame_time = pts_to_microseconds(sc, 1);
 
     logRender("[audio-play] tid=%lu\n", pthread_self());
     init_audio_play();
     queue_init(&pts_queue);
-    q = &ctx->frame_queue;
+    q = &sc->frame_queue;
 
     for (;;) {
         frame = queue_dequeue_wait(q, queue_has_data);
         if (!frame) {
             // 时间更新依赖上面的循环，如果播放到最后没数据了，
             // 需要处理下AL播放队列中剩余的内容，并更新时间
-            wait_remain_buffers(ctx);
+            wait_remain_buffers(sc);
             break;
         }
-        convert_audio_frame(ctx, frame);
+        convert_audio_frame(sc, frame);
         av_frame_free(&frame);
     }
 

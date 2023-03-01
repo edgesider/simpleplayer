@@ -35,36 +35,36 @@ static int frame_can_queue(Queue *q) {
     return q->length <= FRAME_QUEUE_SIZE;
 }
 
-static PlayContext *get_play_context_for_packet(DemuxContext *ctx,
+static StreamContext *get_stream_context_for_packet(PlayContext *ctx,
                                                 const AVPacket *pkt) {
-    if (ctx->v_ctx && pkt->stream_index == ctx->v_ctx->stream->index) {
-        return ctx->v_ctx;
+    if (ctx->video_sc && pkt->stream_index == ctx->video_sc->stream->index) {
+        return ctx->video_sc;
     }
-    if (ctx->a_ctx && pkt->stream_index == ctx->a_ctx->stream->index) {
-        return ctx->a_ctx;
+    if (ctx->audio_sc && pkt->stream_index == ctx->audio_sc->stream->index) {
+        return ctx->audio_sc;
     }
     return NULL;
 }
 
-static void draining(DemuxContext *ctx) {
+static void draining(PlayContext *ctx) {
     // draining mode
     logCodec("enter draining mode\n");
-    if (ctx->v_ctx) {
-        queue_enqueue_wait(&ctx->v_ctx->pkt_queue, NULL, packet_can_queue);
+    if (ctx->video_sc) {
+        queue_enqueue_wait(&ctx->video_sc->pkt_queue, NULL, packet_can_queue);
     }
-    if (ctx->a_ctx) {
-        queue_enqueue_wait(&ctx->a_ctx->pkt_queue, NULL, packet_can_queue);
+    if (ctx->audio_sc) {
+        queue_enqueue_wait(&ctx->audio_sc->pkt_queue, NULL, packet_can_queue);
     }
 }
 
-static void enqueue_packet(DemuxContext *ctx, AVPacket *pkt) {
+static void enqueue_packet(PlayContext *ctx, AVPacket *pkt) {
     if (!pkt) {
         draining(ctx);
         return;
     }
     enum AVMediaType pkt_type =
         ctx->fc->streams[pkt->stream_index]->codecpar->codec_type;
-    PlayContext *play_ctx = get_play_context_for_packet(ctx, pkt);
+    StreamContext *play_ctx = get_stream_context_for_packet(ctx, pkt);
     if (!play_ctx) {
         logCodecE("no PlayContext available for pkt: stream=%d, type=%s",
                   pkt->stream_index, av_get_media_type_string(pkt_type));
@@ -81,7 +81,7 @@ static void enqueue_packet(DemuxContext *ctx, AVPacket *pkt) {
              av_get_media_type_string(play_ctx->cc->codec_type));
 }
 
-void *demux_thread(DemuxContext *ctx) {
+void *demux_thread(PlayContext *ctx) {
     int ret;
     AVPacket *pkt;
 
@@ -115,7 +115,7 @@ void *demux_thread(DemuxContext *ctx) {
     return NULL;
 }
 
-static void decode_packet(PlayContext *ctx, const AVPacket *pkt) {
+static void decode_packet(StreamContext *ctx, const AVPacket *pkt) {
     int ret;
     AVFrame *frame;
     AVCodecContext *cc = ctx->cc;
@@ -171,13 +171,21 @@ static void decode_packet(PlayContext *ctx, const AVPacket *pkt) {
     }
 }
 
-void *decode_thread(PlayContext *ctx) {
+static void decode_thread(PlayContext *pc, enum AVMediaType to_decode) {
     AVPacket *pkt;
     Queue *q;
     const char *media_type_str;
+    StreamContext *sc;
 
-    media_type_str = av_get_media_type_string(ctx->media_type);
-    q = &ctx->pkt_queue;
+    if (to_decode == AVMEDIA_TYPE_VIDEO) {
+        sc = pc->video_sc;
+    } else if (to_decode == AVMEDIA_TYPE_AUDIO) {
+        sc = pc->audio_sc;
+    } else {
+        error("unsupported media type to decode");
+    }
+    media_type_str = av_get_media_type_string(to_decode);
+    q = &sc->pkt_queue;
 
     for (;;) {
         pkt = queue_dequeue_wait(q, queue_has_data);
@@ -189,7 +197,7 @@ void *decode_thread(PlayContext *ctx) {
                      pkt->pts);
         }
 
-        decode_packet(ctx, pkt);
+        decode_packet(sc, pkt);
         if (!pkt) {
             break;
         } else {
@@ -197,10 +205,14 @@ void *decode_thread(PlayContext *ctx) {
         }
     }
     logCodec("[%s-decode] finished\n", media_type_str);
+}
+
+void *decode_video_thread(PlayContext *pc) {
+    decode_thread(pc, AVMEDIA_TYPE_VIDEO);
     return NULL;
 }
 
-int64_t pts_to_microseconds(const PlayContext *ctx, int64_t pts) {
-    AVRational time_base = ctx->stream->time_base;
-    return pts * time_base.num * 1000 * 1000 / time_base.den;
+void *decode_audio_thread(PlayContext *pc) {
+    decode_thread(pc, AVMEDIA_TYPE_AUDIO);
+    return NULL;
 }

@@ -5,6 +5,6 @@
 
 #include "codec.h"
 
-void *audio_play_thread(PlayContext *params);
+void *audio_play_thread(PlayContext *play_ctx);
 
 #endif /* ifndef _AUDIO_H_ */
