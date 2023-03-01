@@ -105,8 +105,10 @@ void *demux_thread(DemuxContext *ctx) {
                 averror(ret, "read packet");
             }
         }
-        enqueue_packet(ctx, pkt_eof ? NULL : pkt);
-        if (pkt_eof) {
+        if (!pkt_eof) {
+            enqueue_packet(ctx, pkt);
+        } else {
+            enqueue_packet(ctx, NULL);
             av_packet_free(&pkt);
         }
     }

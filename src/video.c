@@ -224,7 +224,9 @@ void *video_play_thread(PlayContext *ctx) {
             break;
         }
         ctx->play_time = pts_to_microseconds(ctx, frame->pts);
-        logAudio("video play: curr_time=%f\n", ctx->play_time / 1000.0 / 1000);
+        logRender("[video-play] time updated: curr_time=%f\n",
+                  ctx->play_time / 1000.0 / 1000);
+        // TODO 丢帧和追帧
         process_video_frame(ctx, frame);
         av_frame_free(&frame);
     }

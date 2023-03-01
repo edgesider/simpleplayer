@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define LOG_CODEC 1
-#define LOG_RENDER 0
+#define LOG_CODEC 0
+#define LOG_RENDER 1
 #define LOG_AUDIO 1
 
 #define assert(EXPR)                                                           \
