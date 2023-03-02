@@ -209,10 +209,13 @@ static void process_video_frame(StreamContext *ctx, const AVFrame *frame) {
     av_frame_free(&rgbFrame);
 }
 
+#define MAX_DIFF (50 * 1000)  // in microseconds
+
 void *video_play_thread(PlayContext *pc) {
     AVFrame *frame;
     Queue *q;
     StreamContext *sc = pc->video_sc;
+    StreamContext *audio_sc = pc->audio_sc;
 
     logRender("[video-play] tid=%lu\n", pthread_self());
     init_render();
@@ -227,8 +230,25 @@ void *video_play_thread(PlayContext *pc) {
         sc->play_time = pts_to_microseconds(sc, frame->pts);
         logRender("[video-play] time updated: curr_time=%f\n",
                   sc->play_time / 1000.0 / 1000);
-        // TODO 丢帧和追帧
-        process_video_frame(sc, frame);
+
+        if (audio_sc) {
+            int64_t diff =
+                pts_to_microseconds(sc, frame->pts) - pc->audio_sc->play_time;
+            /* logRender("[video-play] diff=%ld\n", diff); */
+            if (diff <= -MAX_DIFF) {
+                logRender("[video-play] skipping frame, diff=%ld\n", diff);
+            } else if (diff >= MAX_DIFF) {
+                logRender("[video-play] waiting for frame render, diff=%ld\n",
+                          diff);
+                av_usleep(diff);
+                process_video_frame(sc, frame);
+            } else {
+                process_video_frame(sc, frame);
+            }
+        } else {
+            process_video_frame(sc, frame);
+        }
+    next:
         av_frame_free(&frame);
     }
     logRender("[video-play] finished\n");
