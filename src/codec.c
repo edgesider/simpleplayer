@@ -16,23 +16,21 @@
 #include "utils.h"
 #include "video.h"
 
-#define PKT_QUEUE_SIZE 10
+#define PKT_QUEUE_SIZE 20
 #define FRAME_QUEUE_SIZE 40
 
 static int packet_can_queue(Queue *q) {
-    if (q->length > PKT_QUEUE_SIZE) {
+    if (q->length >= PKT_QUEUE_SIZE) {
         logCodec("packet queue is full\n");
-        /* logAudio("packet queue is full\n"); */
     }
-    return q->length <= PKT_QUEUE_SIZE;
+    return q->length < PKT_QUEUE_SIZE;
 }
 
 static int frame_can_queue(Queue *q) {
-    if (q->length > FRAME_QUEUE_SIZE) {
+    if (q->length >= FRAME_QUEUE_SIZE) {
         logCodec("frame queue is full\n");
-        /* logAudio("frame queue is full\n"); */
     }
-    return q->length <= FRAME_QUEUE_SIZE;
+    return q->length < FRAME_QUEUE_SIZE;
 }
 
 static StreamContext *get_stream_context_for_packet(PlayContext *ctx,
@@ -70,15 +68,10 @@ static void enqueue_packet(PlayContext *ctx, AVPacket *pkt) {
                   pkt->stream_index, av_get_media_type_string(pkt_type));
         return;
     }
-    if (play_ctx->media_type == AVMEDIA_TYPE_VIDEO) {
-        queue_enqueue(&play_ctx->pkt_queue, pkt);
-        logCodec("video packet queue size: %d\n", play_ctx->pkt_queue.length);
-    } else {
-        queue_enqueue_wait(&play_ctx->pkt_queue, pkt, packet_can_queue);
-        logCodec("audio packet queue size: %d\n", play_ctx->pkt_queue.length);
-    }
-    logCodec("enqueued packet, type=%s\n",
-             av_get_media_type_string(play_ctx->cc->codec_type));
+    queue_enqueue_wait(&play_ctx->pkt_queue, pkt, packet_can_queue);
+    logCodec("enqueued packet: type=%s, queue_size=%d\n",
+             av_get_media_type_string(play_ctx->cc->codec_type),
+             play_ctx->pkt_queue.length);
 }
 
 void *demux_thread(PlayContext *ctx) {
@@ -119,15 +112,12 @@ static void decode_packet(StreamContext *ctx, const AVPacket *pkt) {
     int ret;
     AVFrame *frame;
     AVCodecContext *cc = ctx->cc;
+    int draining = pkt == NULL;
 
-    // avcodec send_packet
     if ((ret = avcodec_send_packet(cc, pkt)) != 0) {
         averror(ret, "send packet");
     }
 
-    int draining = pkt == NULL;
-
-    // avcodec receive_frame
     for (int n_frame = 0;; n_frame++) {
         if ((frame = av_frame_alloc()) == NULL) {
             averror(AVERROR_UNKNOWN, "alloc frame");
@@ -137,7 +127,7 @@ static void decode_packet(StreamContext *ctx, const AVPacket *pkt) {
         int done = 0;
         if (ret == AVERROR(EAGAIN)) {
             if (draining) {
-                error("not in draining mode but packet is null");
+                error("not in draining mode but EAGAIN returned");
             }
             done = 1;
         } else if (ret == AVERROR_EOF && draining) {
@@ -147,21 +137,10 @@ static void decode_packet(StreamContext *ctx, const AVPacket *pkt) {
         }
 
         if (frame->format >= 0) {
-            /* processFrame(frame, cc->codec_type); */
-            // @see 关于time_base https://www.jianshu.com/p/bf323cee3b8e
-            logCodec("parsed new frame[%d]: type=%s, pts=%ld\n", n_frame,
-                     av_get_media_type_string(cc->codec_type), frame->pts);
-            if (cc->codec_type == AVMEDIA_TYPE_VIDEO) {
-                logCodec("video frame queue size: %d\n",
-                         ctx->frame_queue.length);
-                queue_enqueue(&ctx->frame_queue, frame);
-                /* queue_enqueue_wait(&ctx->frame_queue, frame,
-                 * frame_can_queue); */
-            } else {
-                logCodec("audio frame queue size: %d\n",
-                         ctx->frame_queue.length);
-                queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue);
-            }
+            queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue);
+            logCodec("enqueued new frame: pts=%ld, type=%s, queue_size=%d\n",
+                     frame->pts, av_get_media_type_string(cc->codec_type),
+                     ctx->frame_queue.length);
         }
 
         if (done) {
