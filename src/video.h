@@ -6,5 +6,6 @@
 #include "codec.h"
 
 void *video_play_thread(PlayContext *pc);
+void *render_thread();
 
 #endif /* ifndef _VIDEO_H_ */

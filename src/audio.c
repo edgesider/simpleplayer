@@ -75,14 +75,6 @@ static char *get_source_state_name(ALuint state) {
     return "unknown";
 }
 
-static int64_t get_time_millisec() {
-    struct timeval t;
-    if (gettimeofday(&t, NULL) != 0) {
-        error("gettimeofday");
-    }
-    return t.tv_sec * 1000 + t.tv_usec / 1000;
-}
-
 static Queue
     pts_queue;  // TODO 该队列可以同时用来维护AL队列的其他信息，如帧时长等
 
@@ -95,7 +87,7 @@ static void alloc_buffer_and_queue(StreamContext *sc, const AVFrame *frame) {
     check_al_error("alBufferData");
     alSourceQueueBuffers(a_src, 1, &buf);
     check_al_error("alSourceQueueBuffers");
-    queue_enqueue_nolock(
+    queue_enqueue(
         &pts_queue,
         (void *) pts_to_microseconds(sc, frame->pts));  // TODO 32bit support
 }
@@ -110,7 +102,7 @@ static int free_buffers(StreamContext *sc) {
 
         int64_t last_pts;
         for (int i = 0; i < processed; i++) {
-            last_pts = (int64_t) queue_dequeue_nolock(&pts_queue);
+            last_pts = (int64_t) queue_dequeue(&pts_queue);
         }
         sc->play_time = last_pts;
         logAudio("[audio-play] time updated: curr_time=%lf\n",

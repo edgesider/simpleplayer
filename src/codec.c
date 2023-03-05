@@ -1,23 +1,12 @@
-// 解封装、解码线程
-
-// 解封装
-//   解码线程需要新数据的时候，解封装线程开始解封装；
-//   解码线程会缓存一系列的包，这个缓冲区里面的包会被渲染线程消费；
-//   当缓冲区中的有效包小于某个数量之后（饥饿状态，饥饿阈值），解封装线程开始解封装；
-//   如果音频解码需要新包，但是视频解码不需要，在解新包的过程中解出来了视频包，这些视频包怎么处理？
-//      直接送入视频解码线程的缓冲区（缓冲区需要用链表实现，不限长度，与饥饿阈值不直接相关）
-
 #include "codec.h"
 
 #include <pthread.h>
 #include <unistd.h>
 
 #include "audio.h"
+#include "config.h"
 #include "utils.h"
 #include "video.h"
-
-#define PKT_QUEUE_SIZE 20
-#define FRAME_QUEUE_SIZE 40
 
 static int packet_can_queue(Queue *q) {
     if (q->length >= PKT_QUEUE_SIZE) {
