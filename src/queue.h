@@ -1,6 +1,8 @@
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
+#include <pthread.h>
+
 #include "list.h"
 
 typedef struct {
