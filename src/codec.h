@@ -28,7 +28,8 @@ void *decode_audio_thread(PlayContext *pc);
 void *decode_video_thread(PlayContext *pc);
 
 static int64_t pts_to_microseconds(const StreamContext *sc, int64_t pts) {
-    AVRational time_base = sc->stream->time_base;
+    AVRational time_base =
+        sc->stream->time_base;  // AVStream.time_base的单位是秒
     return pts * time_base.num * 1000 * 1000 / time_base.den;
 }
 

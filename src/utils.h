@@ -52,12 +52,12 @@
         dprintf(2, fmt, ##__VA_ARGS__); \
     } while (0)
 
-#define TimeIt(name, proc) do { \
-    int64_t before = get_time_millisec(); \
-    proc \
-    int64_t after = get_time_millisec(); \
-    logRender("%s cost %ldms\n", name, after - before); \
-} while (0)
+#define TimeIt(name, proc)                                  \
+    do {                                                    \
+        int64_t before = get_time_millisec();               \
+        proc int64_t after = get_time_millisec();           \
+        logRender("%s cost %ldms\n", name, after - before); \
+    } while (0)
 
 __attribute__((noreturn)) void averror(int code, const char *msg);
 __attribute__((noreturn)) void error(const char *msg);

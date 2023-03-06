@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "codec.h"
 #include "list.h"
+#include "render.h"
 #include "video.h"
 
 // av_format_open_input会同时作为输入/输出读取，所以需要初始化为NULL
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
     }
     init_decode(argv[1]);
 
-    pthread_t t_a, t_a_play, t_v, t_v_play, t_demux, t_render;
+    pthread_t t_a, t_a_play, t_v, t_v_play, t_demux;
     PlayContext ctx = {0};
 
     ctx.fc = fc;
@@ -99,9 +100,9 @@ int main(int argc, char *argv[]) {
         };
         queue_init(&ctx.video_sc->pkt_queue);
         queue_init(&ctx.video_sc->frame_queue);
-        pthread_create(&t_render, NULL, (void *) render_thread, NULL);
         pthread_create(&t_v, NULL, (void *) decode_video_thread, &ctx);
         pthread_create(&t_v_play, NULL, (void *) video_play_thread, &ctx);
+        start_render();
     }
     if (a_cc) {
         ctx.audio_sc = malloc(sizeof(StreamContext));
@@ -119,9 +120,9 @@ int main(int argc, char *argv[]) {
 
     pthread_create(&t_demux, NULL, (void *) demux_thread, &ctx);
     if (v_cc) {
-        pthread_join(t_render, NULL);
         pthread_join(t_v, NULL);
         pthread_join(t_v_play, NULL);
+        stop_render();
     }
     if (a_cc) {
         pthread_join(t_a, NULL);

@@ -87,9 +87,8 @@ static void alloc_buffer_and_queue(StreamContext *sc, const AVFrame *frame) {
     check_al_error("alBufferData");
     alSourceQueueBuffers(a_src, 1, &buf);
     check_al_error("alSourceQueueBuffers");
-    queue_enqueue(
-        &pts_queue,
-        (void *) pts_to_microseconds(sc, frame->pts));  // TODO 32bit support
+    queue_enqueue(&pts_queue, (void *) pts_to_microseconds(
+                                  sc, frame->pts));  // TODO 32bit support
 }
 
 static int free_buffers(StreamContext *sc) {
