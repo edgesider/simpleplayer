@@ -4,7 +4,9 @@
 #include <libavutil/frame.h>
 #include <pthread.h>
 
-void start_render();
+#include "codec.h"
+
+void start_render(PlayContext *ctx);
 void commit_frame(AVFrame *frame);
 void stop_render();
 

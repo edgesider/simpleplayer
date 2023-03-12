@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 // clang-format on
 
+#include "play_helper.h"
 #include "video.h"
 
 #include <GLFW/glfw3.h>
@@ -12,6 +13,7 @@
 #include <pthread.h>
 
 #include "config.h"
+#include "event.h"
 #include "render.h"
 #include "utils.h"
 
@@ -98,6 +100,8 @@ void *video_play_thread(PlayContext *pc) {
             update(sc, frame);
         }
         av_frame_free(&frame);
+
+        process_play_events(sc, NULL, NULL);
     }
     logRender("[video-play] finished\n");
 

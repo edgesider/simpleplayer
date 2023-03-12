@@ -9,6 +9,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "config.h"
+#include "play_helper.h"
 #include "utils.h"
 
 // 音频播放相关
@@ -75,8 +77,8 @@ static char *get_source_state_name(ALuint state) {
     return "unknown";
 }
 
-static Queue
-    pts_queue;  // TODO 该队列可以同时用来维护AL队列的其他信息，如帧时长等
+// TODO 该队列可以同时用来维护AL队列的其他信息，如帧时长等
+static Queue pts_queue;
 
 static void alloc_buffer_and_queue(StreamContext *sc, const AVFrame *frame) {
     ALuint buf;
@@ -221,10 +223,18 @@ end:
     a_dev = NULL;
 }
 
-static void convert_audio_frame(StreamContext *ctx, const AVFrame *frame) {
+static void audio_enqueue_frame(StreamContext *ctx, const AVFrame *frame) {
     AVFrame *s16Frame = convert_frame_to_stereo_s16(frame);
     play_audio_frame(ctx, s16Frame);
     av_frame_free(&s16Frame);
+}
+
+static void onPause(StreamContext *sc) {
+    alSourcePause(a_src);
+}
+
+static void onResume(StreamContext *sc) {
+    alSourcePlay(a_src);
 }
 
 void *audio_play_thread(PlayContext *pc) {
@@ -248,8 +258,10 @@ void *audio_play_thread(PlayContext *pc) {
             wait_remain_buffers(sc);
             break;
         }
-        convert_audio_frame(sc, frame);
+        audio_enqueue_frame(sc, frame);
         av_frame_free(&frame);
+
+        process_play_events(sc, onPause, onResume);
     }
 
     logRender("[audio-play] finished\n");

@@ -1,15 +1,17 @@
-// clang-format off
-#include <glad/glad.h>
-// clang-format on
-
 #include "render.h"
 
+// clang-format off
+// glad需要在glfw之前
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// clang-format on
 
+#include "event.h"
 #include "queue.h"
 #include "utils.h"
 
 static pthread_t tid;
+static PlayContext *pc;
 /**
  * 用于视频帧消费线程与渲染线程之间的交互。
  *
@@ -67,6 +69,9 @@ static uint compile_shader(const char *code, uint type) {
     return shader;
 }
 
+static void on_key_event(GLFWwindow *win, int key, int scancode, int action,
+                         int mods);
+
 static void init_render() {
     queue_init(&to_render);
     glfwInit();
@@ -82,6 +87,7 @@ static void init_render() {
         exit(-1);
     }
     glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, on_key_event);
 
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         logRenderE("failed to initialize opengl\n");
@@ -164,6 +170,20 @@ static AVFrame *get_newest_frame() {
     return newest;
 }
 
+static void on_key_event(GLFWwindow *win, int key, int scancode, int action,
+                         int mods) {
+    if (key == GLFW_KEY_Q) {
+        glfwTerminate();
+        // TODO 整体的状态管理（不应由视频线程退出整个进程）
+        exit(-1);
+    } else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+        logRender("[event] forward\n");
+    } else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        logRender("[event] toggle play state\n");
+        play_toggle(pc);
+    }
+}
+
 /**
  * 渲染线程，同时也负责输入事件的捕获
  */
@@ -172,15 +192,11 @@ static void *render_thread() {
 
     // TODO 等待渲染线程就绪之后，视频播放线程再开始工作
     init_render();
+
     AVFrame *curr_frame = NULL;
 
-    // TODO 整体的状态管理（不应由视频线程退出整个进程）
     while (!glfwWindowShouldClose(window) && !stop_requested) {
         glfwPollEvents();
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-            glfwTerminate();
-            exit(-1);
-        }
         logRender("[render] rendering frame...\n");
 
         if (glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_FALSE) {
@@ -193,7 +209,8 @@ static void *render_thread() {
             curr_frame = new_frame;
         }
         if (curr_frame) {
-            // TODO 目前每帧都是全量更新的，是否可以优化成按需更新
+            // TODO 目前每帧都是全量更新的，是否可以优化成
+            // 按需更新（关键在于如何处理SwapBuffers）
             glfwSetWindowSize(window, curr_frame->width, curr_frame->height);
             glViewport(0, 0, curr_frame->width, curr_frame->height);
             glClearColor(0, 0, 0, 1);
@@ -215,7 +232,8 @@ static void *render_thread() {
     return NULL;
 }
 
-void start_render() {
+void start_render(PlayContext *ctx) {
+    pc = ctx;
     pthread_create(&tid, NULL, render_thread, NULL);
 }
 

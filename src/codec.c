@@ -187,3 +187,41 @@ void *decode_audio_thread(PlayContext *pc) {
     decode_thread(pc, AVMEDIA_TYPE_AUDIO);
     return NULL;
 }
+
+static void dispatch_event(PlayContext *pc, enum EventType type) {
+    Event *event =
+        event_alloc_ref(type, !!pc->audio_sc + !!pc->video_sc);
+    if (pc->audio_sc) {
+        queue_enqueue(&pc->audio_sc->play_event_queue, event);
+    }
+    if (pc->video_sc) {
+        queue_enqueue(&pc->video_sc->play_event_queue, event);
+    }
+}
+
+int play_pause(PlayContext *pc) {
+    if (pc->state == STATE_PLAYING) {
+        pc->state = STATE_PAUSE;
+        dispatch_event(pc, EVENT_PAUSE);
+        return 1;
+    }
+    return 0;
+}
+
+int play_resume(PlayContext *pc) {
+    if (pc->state == STATE_PAUSE) {
+        pc->state = STATE_PLAYING;
+        dispatch_event(pc, EVENT_RESUME);
+        return 1;
+    }
+    return 0;
+}
+
+int play_toggle(PlayContext *pc) {
+    if (pc->state == STATE_PLAYING) {
+        return play_pause(pc);
+    } else if (pc->state == STATE_PAUSE) {
+        return play_resume(pc);
+    }
+    return 0;
+}
