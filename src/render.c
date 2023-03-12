@@ -80,7 +80,7 @@ static void init_render() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-    window = glfwCreateWindow(2000, 2000, "ffmpeg-play", NULL, NULL);
+    window = glfwCreateWindow(1000, 1000, "SimplePlayer", NULL, NULL);
     if (window == NULL) {
         logRenderE("failed to create window\n");
         glfwTerminate();
@@ -94,7 +94,7 @@ static void init_render() {
         exit(-1);
     }
 
-    glViewport(0, 0, 2000, 2000);
+    glViewport(0, 0, 1000, 1000);
 
     int succ;
     uint verShader, fragShader;
@@ -202,6 +202,8 @@ static void *render_thread() {
         if (glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_FALSE) {
             glfwShowWindow(window);
         }
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         AVFrame *new_frame = get_newest_frame();
         if (new_frame) {
@@ -213,8 +215,6 @@ static void *render_thread() {
             // 按需更新（关键在于如何处理SwapBuffers）
             glfwSetWindowSize(window, curr_frame->width, curr_frame->height);
             glViewport(0, 0, curr_frame->width, curr_frame->height);
-            glClearColor(0, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
             // TODO 这里可能要处理一下linesize和width不一致的情况
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, curr_frame->width,
                          curr_frame->height, 0, GL_RGB, GL_UNSIGNED_BYTE,
