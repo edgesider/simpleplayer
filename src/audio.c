@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "config.h"
-#include "play_helper.h"
+#include "event_helper.h"
 #include "utils.h"
 
 // 音频播放相关
@@ -69,10 +69,14 @@ static AVFrame *convert_frame_to_stereo_s16(const AVFrame *frame) {
 
 static char *get_source_state_name(ALuint state) {
     switch (state) {
-        case AL_INITIAL: return "initial";
-        case AL_PLAYING: return "playing";
-        case AL_PAUSED: return "paused";
-        case AL_STOPPED: return "stopped";
+        case AL_INITIAL:
+            return "initial";
+        case AL_PLAYING:
+            return "playing";
+        case AL_PAUSED:
+            return "paused";
+        case AL_STOPPED:
+            return "stopped";
     }
     return "unknown";
 }
@@ -237,6 +241,11 @@ static void onResume(StreamContext *sc) {
     alSourcePlay(a_src);
 }
 
+static void onSeek(StreamContext *sc) {
+    alSourceStop(a_src);
+    free_buffers(sc);
+}
+
 void *audio_play_thread(PlayContext *pc) {
     AVFrame *frame;
     Queue *q;
@@ -261,7 +270,7 @@ void *audio_play_thread(PlayContext *pc) {
         audio_enqueue_frame(sc, frame);
         av_frame_free(&frame);
 
-        process_play_events(sc, onPause, onResume);
+        process_play_events(sc, onPause, onResume, onSeek);
     }
 
     logRender("[audio-play] finished\n");

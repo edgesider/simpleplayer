@@ -2,7 +2,6 @@
 #include <glad/glad.h>
 // clang-format on
 
-#include "play_helper.h"
 #include "video.h"
 
 #include <GLFW/glfw3.h>
@@ -14,6 +13,7 @@
 
 #include "config.h"
 #include "event.h"
+#include "event_helper.h"
 #include "render.h"
 #include "utils.h"
 
@@ -52,12 +52,14 @@ static AVFrame *convert_frame_to_rgb24(const AVFrame *frame) {
     return outFrame;
 }
 
+static inline int64_t get_frame_duration(AVCodecContext *cc) {
+    return av_rescale_q(1000 * 1000, (AVRational){1, 1}, cc->framerate);
+}
+
 static void update(StreamContext *ctx, const AVFrame *frame) {
     commit_frame(convert_frame_to_rgb24(frame));
 
-    int64_t frameTime =
-        av_rescale_q(1000 * 1000, (AVRational){1, 1}, ctx->cc->framerate);
-    av_usleep(frameTime);
+    av_usleep(get_frame_duration(ctx->cc));
 }
 
 void *video_play_thread(PlayContext *pc) {
@@ -79,19 +81,19 @@ void *video_play_thread(PlayContext *pc) {
         logRender("[video-play] time updated: curr_time=%f\n",
                   sc->play_time / 1000.0 / 1000);
 
-        if (audio_sc) {
-            int64_t diff =
-                pts_to_microseconds(sc, frame->pts) - pc->audio_sc->play_time;
-            /* logRender("[video-play] diff=%ld\n", diff); */
-            if (diff <= -MAX_DIFF) {
+        if (pc->state != STATE_PLAY_SEEKING &&
+            pc->state != STATE_PAUSE_SEEKING && audio_sc) {
+            int64_t diff = sc->play_time - pc->audio_sc->play_time;
+            if (diff <= -SYNC_DIFF_THRESHOLD) {
                 logRender("[video-play] syncing, skipping frame, diff=%ld\n",
                           diff);
-            } else if (diff >= MAX_DIFF) {
+            } else if (diff >= SYNC_DIFF_THRESHOLD) {
                 logRender(
                     "[video-play] syncing, waiting for frame render, "
                     "diff=%ld\n",
                     diff);
-                av_usleep(diff);
+                int64_t max_wait = get_frame_duration(sc->cc) * SYNC_MAX_WAIT_FRAMES;
+                av_usleep(max_wait < diff ? max_wait : diff);
                 update(sc, frame);
             } else {
                 update(sc, frame);
@@ -101,7 +103,7 @@ void *video_play_thread(PlayContext *pc) {
         }
         av_frame_free(&frame);
 
-        process_play_events(sc, NULL, NULL);
+        process_play_events(sc, NULL, NULL, NULL);
     }
     logRender("[video-play] finished\n");
 

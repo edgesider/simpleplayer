@@ -172,15 +172,21 @@ static AVFrame *get_newest_frame() {
 
 static void on_key_event(GLFWwindow *win, int key, int scancode, int action,
                          int mods) {
-    if (key == GLFW_KEY_Q) {
+    if (key == GLFW_KEY_Q && mods == 0) {
         glfwTerminate();
         // TODO 整体的状态管理（不应由视频线程退出整个进程）
         exit(-1);
     } else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
         logRender("[event] forward\n");
+        play_seek(pc, pc->audio_sc->play_time + 5 * 1000 * 1000);
+    } else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+        logRender("[event] backword\n");
+        play_seek(pc, pc->audio_sc->play_time - 5 * 1000 * 1000);
     } else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
         logRender("[event] toggle play state\n");
         play_toggle(pc);
+    } else if (key == GLFW_KEY_I && action == GLFW_PRESS) {
+        dump_queue_info(pc);
     }
 }
 
@@ -197,7 +203,7 @@ static void *render_thread() {
 
     while (!glfwWindowShouldClose(window) && !stop_requested) {
         glfwPollEvents();
-        logRender("[render] rendering frame...\n");
+        /* logRender("[render] rendering frame...\n"); */
 
         if (glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_FALSE) {
             glfwShowWindow(window);

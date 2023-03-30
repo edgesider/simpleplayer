@@ -5,21 +5,77 @@
 
 #include "audio.h"
 #include "config.h"
+#include "event_helper.h"
 #include "utils.h"
 #include "video.h"
 
+static void dispatch_all_event(PlayContext *pc, Event *event);
+static void dispatch_demux_event(PlayContext *pc, Event *event);
+static void dispatch_decode_event(PlayContext *pc, Event *event);
+static void dispatch_play_event(StreamContext *sc, Event *event);
+static void on_seek_end(PlayContext *pc);
+
 static int packet_can_queue(Queue *q) {
     if (q->length >= PKT_QUEUE_SIZE) {
-        logCodec("packet queue is full\n");
+        /* logCodec("packet queue is full\n"); */
     }
     return q->length < PKT_QUEUE_SIZE;
 }
 
 static int frame_can_queue(Queue *q) {
     if (q->length >= FRAME_QUEUE_SIZE) {
-        logCodec("frame queue is full\n");
+        /* logCodec("frame queue is full\n"); */
     }
     return q->length < FRAME_QUEUE_SIZE;
+}
+
+static void free_frame(AVFrame *frame) {
+    av_frame_free(&frame);
+}
+
+static void free_packet(AVPacket *pkt) {
+    av_packet_free(&pkt);
+}
+
+static void do_seek(AVFormatContext *fc, StreamContext *sc,
+                    int64_t to_microseconds) {
+    if (sc) {
+        av_seek_frame(fc, sc->stream->index,
+                      microseconds_to_pts(sc, to_microseconds), 0);
+        sc->play_time = to_microseconds;
+        avcodec_flush_buffers(sc->cc);
+        queue_clear(&sc->pkt_queue, (DataCleaner) free_packet);
+    }
+}
+
+static void process_demux_event(PlayContext *pc) {
+    /* logCodec("[event-demux] process demux event\n"); */
+    for (int i = 0; i < MAX_EVENTS_PER_LOOP; i++) {
+        Event *event = queue_dequeue(&pc->demux_event_queue);
+        if (!event) {
+            break;
+        }
+        logRender("[event-demux] get type %d\n", event->type);
+        switch (event->type) {
+            case EVENT_SEEK_START: {
+                SeekEvent *seek_start = (SeekEvent *) event;
+                int64_t to_microseconds = seek_start->to_microseconds;
+
+                do_seek(pc->fc, pc->audio_sc, to_microseconds);
+                do_seek(pc->fc, pc->video_sc, to_microseconds);
+
+                Event *seek_end =
+                    event_alloc(EVENT_SEEK_END, sizeof(SeekEvent));
+                ((SeekEvent *) seek_end)->to_microseconds = to_microseconds;
+                dispatch_decode_event(pc, seek_end);
+                event_unref(seek_end);
+                on_seek_end(pc);
+            } break;
+            default:
+                break;
+        }
+        event_unref(event);
+    }
 }
 
 static StreamContext *get_stream_context_for_packet(PlayContext *ctx,
@@ -57,19 +113,24 @@ static void enqueue_packet(PlayContext *ctx, AVPacket *pkt) {
                   pkt->stream_index, av_get_media_type_string(pkt_type));
         return;
     }
-    queue_enqueue_wait(&play_ctx->pkt_queue, pkt, packet_can_queue);
+    while (!queue_enqueue_timedwait(&play_ctx->pkt_queue, pkt, packet_can_queue,
+                                    QUEUE_WAIT_MICROSECONDS)) {
+        process_demux_event(ctx);
+    }
+    process_demux_event(ctx);
     logCodec("enqueued packet: type=%s, queue_size=%d\n",
              av_get_media_type_string(play_ctx->cc->codec_type),
              play_ctx->pkt_queue.length);
 }
 
-void *demux_thread(PlayContext *ctx) {
+void *demux_thread(PlayContext *pc) {
     int ret;
     AVPacket *pkt;
 
     // 编解码的api参考 https://ffmpeg.org/doxygen/trunk/group__lavc__encdec.html
     int pkt_eof = 0;
-    for (; !pkt_eof;) {
+    int i = 0;
+    for (; !pkt_eof; i++) {
         // avcodec 分配一个packet
         // packet中包含一个或多个有效帧
         if ((pkt = av_packet_alloc()) == NULL) {
@@ -79,7 +140,7 @@ void *demux_thread(PlayContext *ctx) {
         // avformat 读取一个packet，其中至少有一个完整的frame
         // @see
         // http://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#details
-        ret = av_read_frame(ctx->fc, pkt);
+        ret = av_read_frame(pc->fc, pkt);
         if (ret) {
             if (ret == AVERROR_EOF) {
                 pkt_eof = 1;
@@ -88,19 +149,46 @@ void *demux_thread(PlayContext *ctx) {
             }
         }
         if (!pkt_eof) {
-            enqueue_packet(ctx, pkt);
+            logCodec("[demux] enqueue packets %d\n", i);
+            enqueue_packet(pc, pkt);
         } else {
-            enqueue_packet(ctx, NULL);
+            enqueue_packet(pc, NULL);
             av_packet_free(&pkt);
         }
     }
     return NULL;
 }
 
-static void decode_packet(StreamContext *ctx, const AVPacket *pkt) {
+static void process_decode_event(PlayContext *pc, StreamContext *sc) {
+    /* logCodec("[event-decode] process decode event\n"); */
+    for (int i = 0; i < MAX_EVENTS_PER_LOOP; i++) {
+        Event *event = queue_dequeue(&sc->decode_event_queue);
+        if (!event) {
+            break;
+        }
+        logCodec("[event-decode] get type %d\n", event->type);
+        switch (event->type) {
+            case EVENT_SEEK_START: {
+                logCodec("[event-decode] waiting for SEEK_END\n");
+                queue_clear(&sc->frame_queue, (DataCleaner) free_frame);
+                dump_queue_info(pc);
+                Event *seek_end =
+                    wait_for_event(&sc->decode_event_queue, EVENT_SEEK_END);
+                dispatch_play_event(sc, seek_end);
+                event_unref(seek_end);
+            } break;
+            default:
+                break;
+        }
+        event_unref(event);
+    }
+}
+
+static void decode_packet(PlayContext *pc, StreamContext *sc,
+                          const AVPacket *pkt) {
     int ret;
     AVFrame *frame;
-    AVCodecContext *cc = ctx->cc;
+    AVCodecContext *cc = sc->cc;
     int draining = pkt == NULL;
 
     if ((ret = avcodec_send_packet(cc, pkt)) != 0) {
@@ -126,20 +214,29 @@ static void decode_packet(StreamContext *ctx, const AVPacket *pkt) {
         }
 
         if (frame->format >= 0) {
-            queue_enqueue_wait(&ctx->frame_queue, frame, frame_can_queue);
+            // TODO 数据包和事件一起处理，保持事件模型的简单
+            while (!queue_enqueue_timedwait(&sc->frame_queue, frame,
+                                            frame_can_queue,
+                                            QUEUE_WAIT_MICROSECONDS)) {
+                // 这里有个问题，如果在这个process函数里面发生了seek，seek会将包队列清空，
+                // 但是由于这是在enqueue的等待循环中，上面的while又会立即传入一个seek之前的帧，
+                // 导致SEEKING状态和包不匹配，进而导致音画同步的时间判断有问题
+                process_decode_event(pc, sc);
+            }
             logCodec("enqueued new frame: pts=%ld, type=%s, queue_size=%d\n",
                      frame->pts, av_get_media_type_string(cc->codec_type),
-                     ctx->frame_queue.length);
+                     sc->frame_queue.length);
         }
 
         if (done) {
             // 当前包解析完毕
             if (draining) {
-                queue_enqueue_wait(&ctx->frame_queue, NULL, frame_can_queue);
+                queue_enqueue_wait(&sc->frame_queue, NULL, frame_can_queue);
             }
             break;
         }
     }
+    process_decode_event(pc, sc);
 }
 
 static void decode_thread(PlayContext *pc, enum AVMediaType to_decode) {
@@ -159,7 +256,10 @@ static void decode_thread(PlayContext *pc, enum AVMediaType to_decode) {
     q = &sc->pkt_queue;
 
     for (;;) {
-        pkt = queue_dequeue_wait(q, queue_has_data);
+        while (!queue_dequeue_timedwait(
+            q, queue_has_data, QUEUE_WAIT_MICROSECONDS, (void **) &pkt)) {
+            process_decode_event(pc, sc);
+        }
         if (!pkt) {
             // 收到空packet之后，进入draining模式，让解码器输出缓存的帧
             logCodec("[%s-decode] got null packet\n", media_type_str);
@@ -168,11 +268,11 @@ static void decode_thread(PlayContext *pc, enum AVMediaType to_decode) {
                      pkt->pts);
         }
 
-        decode_packet(sc, pkt);
+        decode_packet(pc, sc, pkt);
         if (!pkt) {
             break;
         } else {
-            av_packet_free(&pkt);
+            free_packet(pkt);
         }
     }
     logCodec("[%s-decode] finished\n", media_type_str);
@@ -188,21 +288,50 @@ void *decode_audio_thread(PlayContext *pc) {
     return NULL;
 }
 
-static void dispatch_event(PlayContext *pc, enum EventType type) {
-    Event *event =
-        event_alloc_ref(type, !!pc->audio_sc + !!pc->video_sc);
+static void put_event(Queue *q, Event *event) {
+    event_ref(event);
+    queue_enqueue(q, event);
+}
+
+static void dispatch_all_event(PlayContext *pc, Event *event) {
+    logCodec("[event] dispatch_all_event: type=%d\n", event->type);
+    put_event(&pc->demux_event_queue, event);
     if (pc->audio_sc) {
-        queue_enqueue(&pc->audio_sc->play_event_queue, event);
+        put_event(&pc->audio_sc->play_event_queue, event);
+        put_event(&pc->audio_sc->decode_event_queue, event);
     }
     if (pc->video_sc) {
-        queue_enqueue(&pc->video_sc->play_event_queue, event);
+        put_event(&pc->video_sc->play_event_queue, event);
+        put_event(&pc->video_sc->decode_event_queue, event);
     }
+}
+
+static void dispatch_demux_event(PlayContext *pc, Event *event) {
+    logCodec("[event] dispatch_demux_event: type=%d\n", event->type);
+    put_event(&pc->demux_event_queue, event);
+}
+
+static void dispatch_decode_event(PlayContext *pc, Event *event) {
+    logCodec("[event] dispatch_decode_event: type=%d\n", event->type);
+    if (pc->audio_sc) {
+        put_event(&pc->audio_sc->decode_event_queue, event);
+    }
+    if (pc->video_sc) {
+        put_event(&pc->video_sc->decode_event_queue, event);
+    }
+}
+
+static void dispatch_play_event(StreamContext *sc, Event *event) {
+    logCodec("[event] dispatch_play_event: type=%d\n", event->type);
+    put_event(&sc->play_event_queue, event);
 }
 
 int play_pause(PlayContext *pc) {
     if (pc->state == STATE_PLAYING) {
         pc->state = STATE_PAUSE;
-        dispatch_event(pc, EVENT_PAUSE);
+        Event *ev = event_alloc_base(EVENT_PAUSE);
+        dispatch_all_event(pc, ev);
+        event_unref(ev);
         return 1;
     }
     return 0;
@@ -211,7 +340,9 @@ int play_pause(PlayContext *pc) {
 int play_resume(PlayContext *pc) {
     if (pc->state == STATE_PAUSE) {
         pc->state = STATE_PLAYING;
-        dispatch_event(pc, EVENT_RESUME);
+        Event *ev = event_alloc_base(EVENT_RESUME);
+        dispatch_all_event(pc, ev);
+        event_unref(ev);
         return 1;
     }
     return 0;
@@ -224,4 +355,32 @@ int play_toggle(PlayContext *pc) {
         return play_resume(pc);
     }
     return 0;
+}
+
+static void on_seek_end(PlayContext *pc) {
+    logCodec("[seek] on_seek_end\n");
+    if (pc->state == STATE_PLAY_SEEKING) {
+        pc->state = STATE_PLAYING;
+    } else if (pc->state == STATE_PAUSE_SEEKING) {
+        pc->state = STATE_PAUSE;
+    } else {
+        error("not seeking");
+    }
+    dump_queue_info(pc);
+}
+
+int play_seek(PlayContext *pc, int64_t to_microseconds) {
+    logCodec("[demux] seek triggered\n");
+    if (pc->state == STATE_PLAYING) {
+        pc->state = STATE_PLAY_SEEKING;
+    } else if (pc->state == STATE_PAUSE) {
+        pc->state = STATE_PAUSE_SEEKING;
+    } else {
+        return 0;
+    }
+    Event *ev = event_alloc(EVENT_SEEK_START, sizeof(SeekEvent));
+    ((SeekEvent *) ev)->to_microseconds = to_microseconds;
+    dispatch_all_event(pc, ev);
+    event_unref(ev);
+    return 1;
 }
