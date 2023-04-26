@@ -11,8 +11,10 @@
 
 static void dispatch_all_event(PlayContext *pc, Event *event);
 static void dispatch_demux_event(PlayContext *pc, Event *event);
-static void dispatch_decode_event(PlayContext *pc, Event *event);
+static void dispatch_decode_event(StreamContext *sc, Event *event);
+static void dispatch_decode_event_all(PlayContext *pc, Event *event);
 static void dispatch_play_event(StreamContext *sc, Event *event);
+static void dispatch_play_event_all(PlayContext *pc, Event *event);
 static void on_seek_end(PlayContext *pc);
 
 static int packet_can_queue(Queue *q) {
@@ -61,13 +63,17 @@ static void process_demux_event(PlayContext *pc) {
                 SeekEvent *seek_start = (SeekEvent *) event;
                 int64_t to_microseconds = seek_start->to_microseconds;
 
+                // 先广播到解码和播放线程
+                dispatch_decode_event_all(pc, event);
+                dispatch_play_event_all(pc, event);
+
                 do_seek(pc->fc, pc->audio_sc, to_microseconds);
                 do_seek(pc->fc, pc->video_sc, to_microseconds);
 
                 Event *seek_end =
                     event_alloc(EVENT_SEEK_END, sizeof(SeekEvent));
                 ((SeekEvent *) seek_end)->to_microseconds = to_microseconds;
-                dispatch_decode_event(pc, seek_end);
+                dispatch_decode_event_all(pc, seek_end);
                 event_unref(seek_end);
                 on_seek_end(pc);
             } break;
@@ -294,15 +300,16 @@ static void put_event(Queue *q, Event *event) {
 }
 
 static void dispatch_all_event(PlayContext *pc, Event *event) {
-    logCodec("[event] dispatch_all_event: type=%d\n", event->type);
+    logCodec("[event] dispatch_all_event: type=%d\n, video=%d, audio=%d",
+             event->type, !!pc->video_sc, !!pc->audio_sc);
     put_event(&pc->demux_event_queue, event);
     if (pc->audio_sc) {
-        put_event(&pc->audio_sc->play_event_queue, event);
-        put_event(&pc->audio_sc->decode_event_queue, event);
+        dispatch_decode_event(pc->audio_sc, event);
+        dispatch_play_event(pc->audio_sc, event);
     }
     if (pc->video_sc) {
-        put_event(&pc->video_sc->play_event_queue, event);
-        put_event(&pc->video_sc->decode_event_queue, event);
+        dispatch_decode_event(pc->video_sc, event);
+        dispatch_play_event(pc->video_sc, event);
     }
 }
 
@@ -311,19 +318,36 @@ static void dispatch_demux_event(PlayContext *pc, Event *event) {
     put_event(&pc->demux_event_queue, event);
 }
 
-static void dispatch_decode_event(PlayContext *pc, Event *event) {
+static void dispatch_decode_event(StreamContext *sc, Event *event) {
     logCodec("[event] dispatch_decode_event: type=%d\n", event->type);
+    put_event(&sc->decode_event_queue, event);
+}
+
+static void dispatch_decode_event_all(PlayContext *pc, Event *event) {
+    logCodec("[event] dispatch_decode_event_all: type=%d\n, video=%d, audio=%d",
+             event->type, !!pc->video_sc, !!pc->audio_sc);
     if (pc->audio_sc) {
-        put_event(&pc->audio_sc->decode_event_queue, event);
+        dispatch_decode_event(pc->audio_sc, event);
     }
     if (pc->video_sc) {
-        put_event(&pc->video_sc->decode_event_queue, event);
+        dispatch_decode_event(pc->video_sc, event);
     }
 }
 
 static void dispatch_play_event(StreamContext *sc, Event *event) {
     logCodec("[event] dispatch_play_event: type=%d\n", event->type);
     put_event(&sc->play_event_queue, event);
+}
+
+static void dispatch_play_event_all(PlayContext *pc, Event *event) {
+    logCodec("[event] dispatch_play_event_all: type=%d\n, video=%d, audio=%d",
+             event->type, !!pc->video_sc, !!pc->audio_sc);
+    if (pc->audio_sc) {
+        dispatch_play_event(pc->audio_sc, event);
+    }
+    if (pc->video_sc) {
+        dispatch_play_event(pc->video_sc, event);
+    }
 }
 
 int play_pause(PlayContext *pc) {
@@ -380,7 +404,7 @@ int play_seek(PlayContext *pc, int64_t to_microseconds) {
     }
     Event *ev = event_alloc(EVENT_SEEK_START, sizeof(SeekEvent));
     ((SeekEvent *) ev)->to_microseconds = to_microseconds;
-    dispatch_all_event(pc, ev);
+    dispatch_demux_event(pc, ev);
     event_unref(ev);
     return 1;
 }

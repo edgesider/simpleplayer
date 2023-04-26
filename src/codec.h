@@ -66,7 +66,7 @@ static int64_t microseconds_to_pts(const StreamContext *sc,
                                    int64_t microseconds) {
     AVRational time_base =
         sc->stream->time_base;  // AVStream.time_base的单位是秒
-    return microseconds / (time_base.num * 1000 * 1000 / time_base.den);
+    return microseconds * time_base.den / (time_base.num * 1000 * 1000);
 }
 
 static void dump_queue_info(const PlayContext *pc) {
